@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#A8D4F5"/>
+      <stop offset="100%" stop-color="#7FB8F5"/>
+    </linearGradient>
+    <filter id="sh">
+      <feDropShadow dx="0" dy="4" stdDeviation="12" flood-opacity=".18"/>
+    </filter>
+  </defs>
+  <!-- 圆角浅蓝背景（maskable 需要更多安全边距） -->
+  <rect width="512" height="512" rx="112" ry="112" fill="url(#bg)"/>
+  <!-- 猫头 — 缩小至 78% 居中，留出安全区给启动器裁切 -->
+  <g transform="translate(256,280) scale(0.78) translate(-256,-292)" filter="url(#sh)">
+    <!-- 左耳 -->
+    <path d="M148 195 L196 108 L248 178 Z" fill="#FFFFFF" stroke="#DCE6F2" stroke-width="6" stroke-linejoin="round"/>
+    <path d="M166 180 L198 130 L228 172 Z" fill="#FFB3C7"/>
+    <!-- 右耳 -->
+    <path d="M364 195 L316 108 L264 178 Z" fill="#FFFFFF" stroke="#DCE6F2" stroke-width="6" stroke-linejoin="round"/>
+    <path d="M346 180 L314 130 L284 172 Z" fill="#FFB3C7"/>
+    <!-- 脸 -->
+    <circle cx="256" cy="292" r="152" fill="#FFFFFF" stroke="#DCE6F2" stroke-width="6"/>
+    <!-- 腮红 -->
+    <circle cx="170" cy="320" r="28" fill="#FFB3C7" opacity=".65"/>
+    <circle cx="342" cy="320" r="28" fill="#FFB3C7" opacity=".65"/>
+    <!-- 眼睛（眯眼 ^_^） -->
+    <path d="M200 278 Q218 254 236 278" fill="none" stroke="#3D5A80" stroke-width="10" stroke-linecap="round"/>
+    <path d="M276 278 Q294 254 312 278" fill="none" stroke="#3D5A80" stroke-width="10" stroke-linecap="round"/>
+    <!-- 鼻子（爱心） -->
+    <path d="M256 300 C250 292 240 296 244 306 C248 314 256 320 256 320 C256 320 264 314 268 306 C272 296 262 292 256 300Z" fill="#FF8FA3"/>
+    <!-- 嘴巴（ω） -->
+    <path d="M242 322 Q250 334 256 322 Q262 334 270 322" fill="none" stroke="#3D5A80" stroke-width="6" stroke-linecap="round"/>
+    <!-- 胡须 左 -->
+    <line x1="120" y1="302" x2="185" y2="310" stroke="#BCC7D6" stroke-width="3.5" stroke-linecap="round" opacity=".7"/>
+    <line x1="118" y1="322" x2="183" y2="322" stroke="#BCC7D6" stroke-width="3.5" stroke-linecap="round" opacity=".7"/>
+    <line x1="125" y1="340" x2="186" y2="334" stroke="#BCC7D6" stroke-width="3.5" stroke-linecap="round" opacity=".7"/>
+    <!-- 胡须 右 -->
+    <line x1="392" y1="302" x2="327" y2="310" stroke="#BCC7D6" stroke-width="3.5" stroke-linecap="round" opacity=".7"/>
+    <line x1="394" y1="322" x2="329" y2="322" stroke="#BCC7D6" stroke-width="3.5" stroke-linecap="round" opacity=".7"/>
+    <line x1="387" y1="340" x2="326" y2="334" stroke="#BCC7D6" stroke-width="3.5" stroke-linecap="round" opacity=".7"/>
+    <!-- 小星星 ✨ -->
+    <g fill="#FFF59D" opacity=".85">
+      <polygon points="380,170 384,182 396,182 386,190 390,202 380,194 370,202 374,190 364,182 376,182"/>
+      <polygon points="132,200 135,209 144,209 137,214 140,223 132,217 124,223 127,214 120,209 129,209" transform="scale(.7) translate(50,60)"/>
+    </g>
+  </g>
+</svg>
