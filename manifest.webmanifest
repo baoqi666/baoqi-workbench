@@ -1,0 +1,27 @@
+{
+  "name": "喵の工作台 · 生活学习一体化",
+  "short_name": "喵の工作台",
+  "description": "个人生活 / 工作 / 学习一体化移动端工作台：精力管理、番茄钟、健康睡眠、运动打卡、周复盘。纯本地存储，个人自用。",
+  "lang": "zh-CN",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#eaf3fc",
+  "theme_color": "#7fb8f5",
+  "categories": ["productivity", "lifestyle", "health"],
+  "icons": [
+    {
+      "src": "assets/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icons/icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
