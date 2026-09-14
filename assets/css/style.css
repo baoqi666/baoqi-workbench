@@ -679,3 +679,13 @@ input,textarea,select{outline:none}
 .hist-row:last-child{border-bottom:none}
 .hist-row .muted{font-size:11.5px;flex:none}
 .hist-cost{color:var(--warn);font-size:13px;font-weight:800;flex:none;margin-left:auto;min-width:34px;text-align:right}
+
+/* ============ 今日推送卡 ============ */
+.push-card .push-grid{display:flex;flex-direction:column;gap:2px;margin-top:2px}
+.push-row{display:flex;align-items:flex-start;gap:10px;padding:9px 2px;border-bottom:1px solid var(--line-2)}
+.push-row:last-child{border-bottom:none}
+.push-tag{flex:none;font-size:11px;font-weight:800;color:var(--brand-ink);background:var(--brand-soft);border-radius:8px;padding:3px 8px;min-width:42px;text-align:center;margin-top:1px}
+.push-title{font-size:13.5px;font-weight:700;color:var(--ink);line-height:1.4}
+.push-desc{font-size:12.5px;color:var(--ink-3);margin-top:3px;line-height:1.5}
+#pushToggle{flex:none}
+#pushToggle.plain{background:var(--brand-soft);color:var(--brand-ink);border:1px solid transparent}
