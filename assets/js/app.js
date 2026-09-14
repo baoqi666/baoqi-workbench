@@ -222,15 +222,28 @@
   closeDrawer();
   var html = ''
    + '<div class="sheet-head"><div class="sheet-title">' + title + '</div>'
-   + '<div class="sheet-sub">内容已生成，可复制或保存 / 分享到任意位置</div></div>'
+   + '<div class="sheet-sub">已生成备份，可下载文件 / 复制 / 系统分享，建议存到云盘</div></div>'
    + '<textarea class="export-area" id="exportArea" readonly>' + escapeHtml(content) + '</textarea>'
    + '<div class="sheet-actions">'
+   +  '<button class="btn primary" id="downloadBtn"> 下载文件</button>'
    +  '<button class="btn ghost" id="copyBtn"> 复制全部</button>'
-   +  '<button class="btn primary" id="shareBtn"> 保存 / 分享</button>'
+   +  '<button class="btn ghost" id="shareBtn"> 保存 / 分享</button>'
    + '</div>'
    + '<div class="sheet-hint" id="shareHint"></div>';
   UI.sheet(html, function (el) {
    var area = el.querySelector('#exportArea');
+   el.querySelector('#downloadBtn').onclick = function () {
+    try {
+     var blob = new Blob([content], { type: mime + ';charset=utf-8' });
+     var url = URL.createObjectURL(blob);
+     var a = document.createElement('a');
+     a.href = url; a.download = filename;
+     document.body.appendChild(a); a.click();
+     document.body.removeChild(a);
+     setTimeout(function () { try { URL.revokeObjectURL(url); } catch (e) {} }, 2000);
+     UI.toast('文件已下载：' + filename + '（请存到云盘保底）');
+    } catch (e) { shareFallback(el); }
+   };
    el.querySelector('#copyBtn').onclick = function () {
     area.removeAttribute('readonly'); area.focus(); area.select();
     var done = function () { UI.toast('已复制，可粘贴保存'); area.setAttribute('readonly', ''); };
