@@ -34,6 +34,14 @@
   var e = rec(td);
   var doneN = e.steps.filter(function (s) { return s; }).length;
 
+  var c = Push.current();
+  var sentenceCard = '<div class="card expr-tip" id="dailySentence">' +
+   '<div class="row" style="gap:10px;align-items:flex-start">' +
+    '<div class="grow"><b style="font-size:14px">今日一句 · 自信表达</b>' +
+     '<div class="muted" style="font-size:13px;margin-top:5px;line-height:1.55">' + esc(c.sentence || '') + '</div></div>' +
+    '<div style="flex:none;font-size:11px;color:#b9a07a;white-space:nowrap">每日更新</div>' +
+   '</div></div>';
+
   var steps = STEPS.map(function (s, i) {
    var on = e.steps[i];
    return '' +
@@ -57,6 +65,7 @@
    : '';
 
   return '<div class="fade-in">' +
+   sentenceCard +
    '<div class="card expr-head">' +
     '<div class="row" style="gap:12px">' +
      '<div style="width:46px;height:46px;border-radius:14px;overflow:hidden;flex:none">' + Icons.cat('express') + '</div>' +
