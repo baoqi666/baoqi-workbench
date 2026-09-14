@@ -1,0 +1,12 @@
+/index.html
+  Cache-Control: no-cache
+/
+  Cache-Control: no-cache
+/assets/js/*.js
+  Cache-Control: no-cache
+/assets/js/pages/*.js
+  Cache-Control: no-cache
+/assets/js/content/*.js
+  Cache-Control: no-cache
+/assets/css/*.css
+  Cache-Control: no-cache
