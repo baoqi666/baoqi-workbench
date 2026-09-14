@@ -175,7 +175,14 @@
  }
 
  function render() {
-  return '<div class="fade-in">' + sleepCard() + waterCard() + foodCard() +
+  var c = Push.current();
+  var tipCard = '<div class="card" style="border-left:3px solid #8fd0a8">' +
+   '<div class="row" style="gap:10px;align-items:flex-start">' +
+    '<div class="grow"><b style="font-size:14px">健康小知识</b>' +
+     '<div class="muted" style="font-size:13px;margin-top:5px;line-height:1.55">' + esc(c.health || '') + '</div></div>' +
+    '<div style="flex:none;font-size:11px;color:#7fae93;white-space:nowrap">每日更新</div>' +
+   '</div></div>';
+  return '<div class="fade-in">' + tipCard + sleepCard() + waterCard() + foodCard() +
    '<div style="height:12px"></div></div>';
  }
 
