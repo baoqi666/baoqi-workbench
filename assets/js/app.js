@@ -68,6 +68,7 @@
   var moved = Store.rollover();
   var newSum = Store.autoArchiveWeeks();
   go('home');
+  if (global.Push && Push.sync) Push.sync();
   setTimeout(function () {
    if (newSum > 0) UI.toast('已自动生成 ' + newSum + ' 篇周总结，去「周总结」查看 ');
    else if (moved) UI.toast('有 ' + moved + ' 项未完成任务已留存到今天');
