@@ -35,12 +35,14 @@
   var doneN = e.steps.filter(function (s) { return s; }).length;
 
   var c = Push.current();
-  var sentenceCard = '<div class="card expr-tip" id="dailySentence">' +
-   '<div class="row" style="gap:10px;align-items:flex-start">' +
-    '<div class="grow"><b style="font-size:14px">今日一句 · 自信表达</b>' +
-     '<div class="muted" style="font-size:13px;margin-top:5px;line-height:1.55">' + esc(c.sentence || '') + '</div></div>' +
-    '<div style="flex:none;font-size:11px;color:#b9a07a;white-space:nowrap">每日更新</div>' +
-   '</div></div>';
+  var sText = (c.sentence && c.sentence.text) || '今天也给自己一段安静的思考，去慢一点、深一点地活着。';
+  var sentenceCard = '<div class="card daily-deep" id="dailySentence">' +
+   '<div class="row" style="gap:10px;align-items:flex-start;margin-bottom:9px">' +
+    '<div class="grow"><b style="font-size:14.5px">今日深度思考 · 自信表达</b></div>' +
+    '<div style="flex:none;font-size:11px;color:#b9a07a;white-space:nowrap;margin-top:3px">每日更新</div>' +
+   '</div>' +
+   '<div class="deep-quote">' + esc(sText) + '</div>' +
+   '</div>';
 
   var steps = STEPS.map(function (s, i) {
    var on = e.steps[i];
