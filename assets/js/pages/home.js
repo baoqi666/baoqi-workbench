@@ -173,7 +173,7 @@
 
  function refreshToggle(btn) {
   var st = Push.status();
-  var on = (st === 'native' || st === 'granted');
+  var on = (st === 'granted');
   btn.textContent = on ? '已开启提醒' : '开启提醒';
   btn.className = 'pill-btn' + (on ? ' plain' : '');
  }
