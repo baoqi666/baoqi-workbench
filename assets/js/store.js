@@ -68,6 +68,7 @@
    rewards: [],
    redeemLog: [],
    redeemed: 0,
+   rewardDismissed: [],
    budget: { month: '', amount: 0, expenses: [], settledMonth: '' },
    quote: { date: '', idx: 0 },
    budgets: {},
@@ -604,6 +605,52 @@ function addBudgetSaved(amount) {
   return { ok: true };
  }
 
+ /* ---------- 系统每日推荐奖励（选择性纳入） ---------- */
+ /** 确定性随机数发生器（按日期种子，保证同一天推荐稳定） */
+ function mulberry32(seed) {
+  var a = seed >>> 0;
+  return function () {
+   a |= 0; a = (a + 0x6D2B79F5) | 0;
+   var t = Math.imul(a ^ (a >>> 15), 1 | a);
+   t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+   return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+ }
+ /** 今日系统推荐：从内容池按日期种子选 n 条，排除已纳入 / 已忽略 */
+ function dailyRewardSuggestions(n) {
+  n = n || 4;
+  var pool = (global.RewardSuggestions || []).slice();
+  var inc = {};
+  (state.rewards || []).forEach(function (r) { if (r.sysId) inc[r.sysId] = 1; });
+  var dis = {};
+  (state.rewardDismissed || []).forEach(function (id) { dis[id] = 1; });
+  var avail = pool.filter(function (s) { return !inc[s.id] && !dis[s.id]; });
+  var seed = parseInt((Store.today() || '').replace(/-/g, ''), 10) || 1;
+  var rng = mulberry32(seed);
+  for (var i = avail.length - 1; i > 0; i--) {
+   var j = Math.floor(rng() * (i + 1));
+   var tmp = avail[i]; avail[i] = avail[j]; avail[j] = tmp;
+  }
+  return avail.slice(0, n);
+ }
+ /** 把一条系统推荐纳入个人奖励库 */
+ function includeSuggestion(s) {
+  if (!s) return;
+  state.rewards.unshift({
+   id: uid(), name: s.name || '奖励',
+   cost: Math.max(0, Math.round(+s.cost || 0)),
+   createdAt: Date.now(), sysId: s.id
+  });
+  save();
+ }
+ /** 忽略一条系统推荐（不再出现） */
+ function dismissSuggestion(id) {
+  if (!id) return;
+  state.rewardDismissed = state.rewardDismissed || [];
+  if (state.rewardDismissed.indexOf(id) === -1) state.rewardDismissed.push(id);
+  save();
+ }
+
  /* ---------- 本月预算 / 支出 / 结余存罐 ---------- */
  function curMonth() { return new Date().getFullYear() + '-' + pad(new Date().getMonth() + 1); }
  /** 设置本月预算：切换月份时自动重置支出记录 */
@@ -831,6 +878,7 @@ function addBudgetSaved(amount) {
   saveReview: saveReview, removeReview: removeReview,
   totalFocusMinutes: totalFocusMinutes, availablePoints: availablePoints, earnedPoints: earnedPoints,
   addReward: addReward, updateReward: updateReward, removeReward: removeReward, redeem: redeem,
+  dailyRewardSuggestions: dailyRewardSuggestions, includeSuggestion: includeSuggestion, dismissSuggestion: dismissSuggestion,
   curMonth: curMonth, setBudget: setBudget, addExpense: addExpense, removeExpense: removeExpense,
   budgetSpent: budgetSpent, budgetRemaining: budgetRemaining,
   genWeekStats: genWeekStats, weekHasData: weekHasData, archiveWeek: archiveWeek,
