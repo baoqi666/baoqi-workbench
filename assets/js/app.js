@@ -3,7 +3,7 @@
   ============================================================ */
 (function (global) {
  var $ = UI.$, $$ = UI.$$;
- var ROUTES = ['home', 'plan', 'ideas', 'express', 'dream', 'reward', 'health', 'fitness', 'review'];
+ var ROUTES = ['home', 'plan', 'ideas', 'express', 'dream', 'reward', 'health', 'fitness', 'review', 'weeksum'];
  var current = null;
  var entered = false;
 
@@ -66,9 +66,11 @@
 
   var n = Store.checkin();
   var moved = Store.rollover();
+  var newSum = Store.autoArchiveWeeks();
   go('home');
   setTimeout(function () {
-   if (moved) UI.toast('有 ' + moved + ' 项未完成任务已留存到今天');
+   if (newSum > 0) UI.toast('已自动生成 ' + newSum + ' 篇周总结，去「周总结」查看 ');
+   else if (moved) UI.toast('有 ' + moved + ' 项未完成任务已留存到今天');
    else UI.toast('连续打卡第 ' + n + ' 天，欢迎回来 ');
   }, 620);
  }
@@ -323,6 +325,18 @@
     ['summary', 'learn', 'life', 'sport', 'money', 'problem', 'improve', 'goal'].forEach(function (f) {
      if (r[f]) line('   - ' + f + '：' + r[f]);
     });
+   });
+  } else { line(' （无）'); }
+  line('');
+
+  line('【周总结归档（共 ' + (s.summaries ? s.summaries.length : 0) + ' 篇）】');
+  if (s.summaries && s.summaries.length) {
+   s.summaries.slice().sort(function (a, b) { return a.week < b.week ? 1 : -1; }).forEach(function (w, i) {
+    line(' ' + (i + 1) + '. [' + w.week + '] ' + w.range + ' · ' + w.tagline);
+    line('    专注 ' + w.focusMin + ' 分 · 番茄 ' + w.pomos + ' 个 · 任务 ' + w.done + '/' + w.taskTotal + ' · 运动 ' + w.fitCount + ' 次/' + w.fitMin + ' 分 · 饮水 ' + w.water + ' 杯 · 睡眠 ' + w.sleepDays + ' 天');
+    if (w.budget) line('    预算 ' + w.budget.amount + ' / 已花 ' + w.budget.spent + ' / 已存 ' + w.budget.saved + ' / 剩余 ' + w.budget.left);
+    if (w.fundsTotal) line('    储蓄罐合计 ' + w.fundsTotal + ' 元');
+    if (w.note) line('    手记：' + w.note);
    });
   } else { line(' （无）'); }
   line('');
