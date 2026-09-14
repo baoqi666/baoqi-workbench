@@ -1,5 +1,5 @@
 /* 喵の工作台 Service Worker —— 离线缓存应用外壳 */
-const CACHE = 'catdesk-v1';
+const CACHE = 'catdesk-v2';
 const SHELL = [
  './',
  './index.html',
@@ -16,6 +16,7 @@ const SHELL = [
  './assets/js/pages/health.js',
  './assets/js/pages/fitness.js',
  './assets/js/pages/review.js',
+ './assets/js/pages/weeksum.js',
  './assets/js/pages/express.js',
  './assets/js/pages/dream.js',
  './assets/js/pages/reward.js',
