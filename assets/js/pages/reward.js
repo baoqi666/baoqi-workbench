@@ -108,12 +108,29 @@
      rewards.map(rewardRow).join('')
    : UI.emptyBox('还没有奖励，点右下角 + 添加你想兑换的奖励 ');
 
+  // 今日推荐：系统每日推荐，可选择性纳入个人奖励库
+  var recs = Store.dailyRewardSuggestions(4);
+  var recSec = recs.length
+   ? '<div class="sec-title"><h2><span class="bar-mark"></span>今日推荐</h2><span class="more">系统推荐 · 可选择性纳入</span></div>' +
+     recs.map(function (s) {
+      return '<div class="reward-row rec-row" data-sid="' + s.id + '">' +
+       '<div class="grow">' +
+        '<div class="rr-name">' + esc(s.name) + '</div>' +
+        '<div class="rr-cost">' + (s.cost || 0) + ' 分 / 次 · 系统推荐</div>' +
+       '</div>' +
+       '<button class="pill-btn" data-act="include">纳入</button>' +
+       '<button class="mini-act" data-act="dismiss" title="忽略">✕</button>' +
+      '</div>';
+     }).join('')
+   : '<div class="sec-title"><h2><span class="bar-mark"></span>今日推荐</h2></div>' +
+     '<div class="card muted" style="font-size:13px;padding:14px">今天的推荐都处理完啦，明天会有新的小确幸等你挑～</div>';
+
   var hist = log.length
    ? '<div class="sec-title"><h2><span class="bar-mark"></span>兑换记录</h2></div>' +
      '<div class="card">' + log.map(histRow).join('') + '</div>'
    : '';
 
-  return '<div class="fade-in">' + head + list + hist + '<div style="height:56px"></div></div>' +
+  return '<div class="fade-in">' + head + recSec + list + hist + '<div style="height:56px"></div></div>' +
    '<button class="fab" id="addReward"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>';
  }
 
@@ -125,6 +142,23 @@
  function mount(root) {
   var add = root.querySelector('#addReward');
   if (add) add.onclick = function () { rewardSheet(null); };
+  // 今日推荐：选择性纳入 / 忽略
+  UI.$$('.rec-row', root).forEach(function (el) {
+   var sid = el.dataset.sid;
+   var s = null; (Store.dailyRewardSuggestions(999) || []).forEach(function (x) { if (x.id === sid) s = x; });
+   if (!s) return;
+   UI.$$('[data-act]', el).forEach(function (b) {
+    b.onclick = function (ev) {
+     ev.stopPropagation();
+     var act = b.dataset.act;
+     if (act === 'include') {
+      Store.includeSuggestion(s); refresh(); UI.toast('已加入你的奖励库：' + s.name);
+     } else if (act === 'dismiss') {
+      Store.dismissSuggestion(s.id); refresh(); UI.toast('已忽略，明天再来 ');
+     }
+    };
+   });
+  });
   UI.$$('.reward-row', root).forEach(function (el) {
    var id = el.dataset.id;
    var r = null; (Store.state.rewards || []).forEach(function (x) { if (x.id === id) r = x; });
