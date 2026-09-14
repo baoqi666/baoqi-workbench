@@ -76,22 +76,26 @@
   return d;
  }
 
+ /* 权限状态（同步标记：null=未知, granted/denied） */
+ var _perm = null;
+
  /* 权限 */
  async function ensurePermission() {
   var ln = nativeLN();
   if (ln) {
    try {
     var st = await ln.checkPermissions();
-    if (st && st.display === 'granted') return 'granted';
-    if (st && st.display === 'denied') return 'denied';
+    if (st && st.display === 'granted') { _perm = 'granted'; return 'granted'; }
+    if (st && st.display === 'denied') { _perm = 'denied'; return 'denied'; }
     var r = await ln.requestPermissions();
-    return (r && r.display === 'granted') ? 'granted' : 'denied';
+    if (r && r.display === 'granted') { _perm = 'granted'; return 'granted'; }
+    _perm = 'denied'; return 'denied';
    } catch (e) { return 'error'; }
   }
   if (!('Notification' in window)) return 'unsupported';
-  if (Notification.permission === 'granted') return 'granted';
-  if (Notification.permission === 'denied') return 'denied';
-  try { return await Notification.requestPermission(); } catch (e) { return 'denied'; }
+  if (Notification.permission === 'granted') { _perm = 'granted'; return 'granted'; }
+  if (Notification.permission === 'denied') { _perm = 'denied'; return 'denied'; }
+  try { var p = await Notification.requestPermission(); if (p === 'granted') _perm = 'granted'; return p; } catch (e) { return 'denied'; }
  }
 
  async function cancelNative(ids) {
@@ -205,7 +209,7 @@
 
  /* 开关状态：native / granted / denied / default / unsupported */
  function status() {
-  if (nativeLN()) return 'native';
+  if (nativeLN()) return (_perm === 'granted') ? 'granted' : 'native';
   if (!('Notification' in window)) return 'unsupported';
   return Notification.permission; // granted / denied / default
  }
