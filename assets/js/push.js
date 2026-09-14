@@ -147,14 +147,15 @@
    m.week = wKey;
   }
 
-  // 每日 8:00 句子
+  // 每日 8:00 句子（通知只放短引导，全文在自信表达模块）
   var sf = nextDailyFire(8, 0);
   var sKey = isoDate(sf);
   if (m.sentence !== sKey) {
    await cancelNative([ID.sentence]);
+   var sObj = pick(C.sentences, sKey) || {};
    sched.push({
-    id: ID.sentence, title: '今日一句 · 自信表达',
-    body: pick(C.sentences, sKey) || '今天也要好好说话',
+    id: ID.sentence, title: '今日深度思考 · 自信表达',
+    body: sObj.brief || '今天给自己一段安静的思考',
     schedule: { at: sf }, extra: { type: 'sentence' }
    });
    m.sentence = sKey;
@@ -188,7 +189,8 @@
   var cur = current();
   try {
    if (m.sentence !== td) {
-    new Notification('今日一句 · 自信表达', { body: cur.sentence || '' });
+    var sObj = cur.sentence || {};
+    new Notification('今日深度思考 · 自信表达', { body: sObj.brief || '今天给自己一段安静的思考' });
     new Notification('健康小知识', { body: cur.health || '' });
     m.sentence = td; m.health = td;
    }
