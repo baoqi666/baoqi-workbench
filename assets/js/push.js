@@ -27,9 +27,23 @@
   return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
  }
 
- /* 原生本地通知是否可用（APK 内置插件时存在） */
+ /* 原生本地通知是否可用（APK 内置插件时存在）。
+    远程加载的网页不会 import 插件的 web shim，因此 Plugins.LocalNotifications 默认未注册；
+    需在原生环境下用 Capacitor.registerPlugin 主动注册（借助原生 PluginHeaders 路由调用）。 */
+ var _lnHandle = null, _lnProbed = false;
  function nativeLN() {
-  return !!(global.Capacitor && Capacitor.Plugins && Capacitor.Plugins.LocalNotifications);
+  if (_lnProbed) return _lnHandle;
+  _lnProbed = true;
+  try {
+   if (global.Capacitor && typeof Capacitor.isNativePlatform === 'function' && Capacitor.isNativePlatform()) {
+    if (Capacitor.registerPlugin && !(Capacitor.Plugins && Capacitor.Plugins.LocalNotifications)) {
+     try { Capacitor.registerPlugin('LocalNotifications'); } catch (e) {}
+    }
+    var h = Capacitor.Plugins && Capacitor.Plugins.LocalNotifications;
+    if (h) _lnHandle = h;
+   }
+  } catch (e) {}
+  return _lnHandle;
  }
 
  /* 当前周期应展示的内容（in-app 永远用这个） */
@@ -64,13 +78,13 @@
 
  /* 权限 */
  async function ensurePermission() {
-  if (nativeLN()) {
+  var ln = nativeLN();
+  if (ln) {
    try {
-    var LN = Capacitor.Plugins.LocalNotifications;
-    var st = await LN.checkPermissions();
+    var st = await ln.checkPermissions();
     if (st && st.display === 'granted') return 'granted';
     if (st && st.display === 'denied') return 'denied';
-    var r = await LN.requestPermissions();
+    var r = await ln.requestPermissions();
     return (r && r.display === 'granted') ? 'granted' : 'denied';
    } catch (e) { return 'error'; }
   }
@@ -81,9 +95,10 @@
  }
 
  async function cancelNative(ids) {
-  if (!nativeLN()) return;
+  var ln = nativeLN();
+  if (!ln) return;
   try {
-   await Capacitor.Plugins.LocalNotifications.cancel({ notifications: ids.map(function (i) { return { id: i }; }) });
+   await ln.cancel({ notifications: ids.map(function (i) { return { id: i }; }) });
   } catch (e) {}
  }
 
@@ -109,7 +124,7 @@
   if (!nativeLN()) return false;
   var perm = await ensurePermission();
   if (perm !== 'granted') return false;
-  var LN = Capacitor.Plugins.LocalNotifications;
+  var LN = nativeLN();
   var C = global.PushContent || { changsha: [], sentences: [], health: [] };
   var m = markers();
   var sched = [];
