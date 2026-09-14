@@ -104,8 +104,33 @@
    '</div>';
  }
 
+ function pushRow(tag, title, desc) {
+  return '<div class="push-row">' +
+   '<span class="push-tag">' + esc(tag) + '</span>' +
+   '<div class="grow"><div class="push-title">' + esc(title) + '</div>' +
+   (desc ? '<div class="push-desc">' + esc(desc) + '</div>' : '') + '</div></div>';
+ }
+
+ function pushCard() {
+  var c = Push.current();
+  var st = Push.status();
+  var on = (st === 'native' || st === 'granted');
+  var label = on ? '已开启提醒' : '开启提醒';
+  return '' +
+   '<div class="card push-card" id="pushCard">' +
+    '<div class="sec-title"><h2><span class="bar-mark"></span>今日推送</h2>' +
+     '<button class="pill-btn' + (on ? ' plain' : '') + '" id="pushToggle">' + label + '</button></div>' +
+    '<div class="push-grid">' +
+     pushRow('出门', c.week ? c.week.name : '—', c.week ? c.week.tip : '本周推荐一个长沙去处') +
+     pushRow('今日一句', '自信表达', c.sentence || '今天也要好好说话') +
+     pushRow('健康', '小知识', c.health || '照顾好身体') +
+    '</div>' +
+   '</div>';
+ }
+
  function render() {
   return '<div class="fade-in">' +
+   pushCard() +
    pointsCard() +
    streakCard() +
    '<div class="stat-grid">' +
@@ -146,10 +171,33 @@
    '</div>';
  }
 
+ function refreshToggle(btn) {
+  var st = Push.status();
+  var on = (st === 'native' || st === 'granted');
+  btn.textContent = on ? '已开启提醒' : '开启提醒';
+  btn.className = 'pill-btn' + (on ? ' plain' : '');
+ }
+
  function mount(root) {
   root = root || UI.$('#view');
   var pc = root.querySelector('#pointsCard');
   if (pc) pc.onclick = function () { App.go('reward'); };
+  var pt = root.querySelector('#pushToggle');
+  if (pt) pt.onclick = function () {
+   pt.disabled = true;
+   Push.ensurePermission().then(function (p) {
+    if (p === 'granted') {
+     Push.sync().then(function () { UI.toast('提醒已开启 · 周一与每日会主动通知你'); refreshToggle(pt); });
+    } else if (p === 'denied') {
+     UI.toast('通知权限被拒绝，请在系统设置里开启');
+    } else if (p === 'unsupported') {
+     UI.toast('当前环境不支持系统通知，内容已在卡片展示');
+    } else {
+     UI.toast('未能开启通知');
+    }
+    pt.disabled = false;
+   });
+  };
  }
 
  Pages.home = {
