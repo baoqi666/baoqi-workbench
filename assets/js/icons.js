@@ -18,7 +18,7 @@
   account:   '#f5f2ea', streak: '#fbf0e6', timer: '#f5f2ea', eye: '#f5f2ea',
   leg:       '#f5f2ea', back: '#f5f2ea', arm: '#f5f2ea', shoulder: '#f5f2ea',
   hip:       '#f5f2ea', posture: '#f5f2ea', calm: '#f5f2ea', express: '#f5f2ea',
-  dream:     '#f5f2ea', output: '#f5f2ea', other: '#f5f2ea', reward: '#f5f2ea'
+  dream:     '#f5f2ea', output: '#f5f2ea', other: '#f5f2ea', reward: '#f5f2ea', summary: '#f5f2ea'
  };
 
  // 每个功能对应的线条字形（24x24 局部坐标，currentColor 描边、不填充）
@@ -50,7 +50,8 @@
   dream:    '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/>',
   output:   '<path d="M12 16V5"/><path d="M8 9l4-4 4 4"/><path d="M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3"/>',
   other:    '<circle cx="6" cy="6" r="1.5"/><circle cx="12" cy="6" r="1.5"/><circle cx="18" cy="6" r="1.5"/><circle cx="6" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="18" cy="12" r="1.5"/><circle cx="6" cy="18" r="1.5"/><circle cx="12" cy="18" r="1.5"/><circle cx="18" cy="18" r="1.5"/>',
-  reward:   '<path d="M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M7 6H4v2a3 3 0 0 0 3 3"/><path d="M17 6h3v2a3 3 0 0 1-3 3"/><path d="M12 14v4"/><path d="M9 21h6"/>'
+  reward:   '<path d="M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M7 6H4v2a3 3 0 0 0 3 3"/><path d="M17 6h3v2a3 3 0 0 1-3 3"/><path d="M12 14v4"/><path d="M9 21h6"/>',
+  summary:  '<path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/><path d="M9 12h6"/><path d="M9 15.5h4"/><path d="M8.6 10.2l1.3 1.3 2.1-2.5"/>'
  };
 
  /** 主图标：浅中性方块底 + currentColor 描边线条字形 */
