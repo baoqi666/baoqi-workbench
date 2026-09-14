@@ -46,9 +46,9 @@ self.addEventListener('fetch', function (e) {
  // 跨域资源走网络，失败也不阻塞
  if (url.origin !== location.origin) return;
 
- // 页面导航：缓存优先，回退到首页
+ // 页面导航：强制绕过 HTTP 缓存拿最新首页（解决 GitHub Pages 10 分钟缓存导致的不更新）
  if (req.mode === 'navigate') {
-  e.respondWith(fetch(req).then(function (r) { return r; }).catch(function () {
+  e.respondWith(fetch(req, { cache: 'no-store' }).then(function (r) { return r; }).catch(function () {
    return caches.match('./index.html');
   }));
   return;
