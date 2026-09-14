@@ -18,6 +18,7 @@
  function weekShort(dateStr) { return weekName(dateStr).replace('星期', ''); }
  /** 本周一 */
  function monday(dateStr) {
+  dateStr = dateStr || today();
   var d = parse(dateStr), w = d.getDay() || 7;
   d.setDate(d.getDate() - (w - 1));
   return fmt(d);
@@ -70,6 +71,7 @@
    budget: { month: '', amount: 0, expenses: [], settledMonth: '' },
    quote: { date: '', idx: 0 },
    budgets: {},
+   summaries: [],
    seeded: false
   };
  }
@@ -93,6 +95,7 @@
     if (!raw.redeemLog) raw.redeemLog = [];
     if (raw.redeemed == null) raw.redeemed = 0;
     if (!raw.budget || !raw.budget.expenses) raw.budget = { month: '', amount: 0, expenses: [], settledMonth: '' };
+    if (!raw.summaries) raw.summaries = [];
     // 迁移：历史已完成的任务（未走过计时器、无 doneCredit）补记预计时长为积分来源
     Object.keys(raw.days || {}).forEach(function (dt) {
      (raw.days[dt].tasks || []).forEach(function (t) {
@@ -689,6 +692,120 @@ function addBudgetSaved(amount) {
   return true;
  }
 
+ /* ---------- 周总结（自动归档） ---------- */
+ /** 计算某一周（以周一 mon 起）的数据快照，不落库，供实时预览与归档复用 */
+ function genWeekStats(mon) {
+  mon = mon || monday();
+  var start = mon, sun = shift(start, 6), wk = weekKey(start);
+  var focus = 0, pomos = 0, done = 0, taskTotal = 0, fitCount = 0, fitMin = 0, water = 0, sleepDays = 0;
+  var daily = [], ms0 = parse(start).getTime(), ms1 = parse(sun).getTime() + 86400000;
+  for (var i = 0; i < 7; i++) {
+   var d = shift(start, i);
+   var day = state.days[d];
+   var df = 0;
+   if (day) {
+    df = day.focusMin || 0;
+    (day.tasks || []).forEach(function (t) { if (t.done) done++; });
+    taskTotal += (day.tasks || []).length;
+    focus += df; pomos += (day.pomos || 0);
+   }
+   (state.fitness.logs[d] || []).forEach(function (l) { fitCount++; fitMin += l.minutes || 0; });
+   var h = state.health[d];
+   if (h) { water += h.water || 0; if (h.sleepAt && h.wakeAt) sleepDays++; }
+   daily.push({ label: weekShort(d), value: df });
+  }
+  var ideasDone = 0;
+  (state.ideas || []).forEach(function (it) {
+   if (it.done && it.doneAt && it.doneAt >= ms0 && it.doneAt < ms1) ideasDone++;
+  });
+  // 本月预算快照（以本周周一所在月份）
+  var month = start.slice(0, 7), mb = (state.budgets || {})[month];
+  var budget = mb ? {
+   amount: mb.amount || 0, spent: mb.spent || 0, saved: mb.saved || 0,
+   left: Math.max(0, (mb.amount || 0) - (mb.spent || 0) - (mb.saved || 0))
+  } : null;
+  // 储蓄罐快照
+  var funds = (state.funds || []).map(function (f) { return { name: f.name, balance: f.balance || 0, target: f.target || 0 }; });
+  var fundsTotal = funds.reduce(function (a, f) { return a + (f.balance || 0); }, 0);
+  // 关联周复盘
+  var review = null;
+  (state.reviews || []).forEach(function (r) {
+   if (r.type === 'week' && r.week === wk) {
+    var F = [
+     ['work', '本周工作'], ['study', '学习进度'], ['life', '生活收获'], ['sport', '运动执行'],
+     ['money', '理财消费'], ['problem', '存在问题'], ['improve', '下周改进'], ['goal', '下周目标']
+    ];
+    var fields = [];
+    F.forEach(function (kv) { if (r[kv[0]]) fields.push({ n: kv[1], t: r[kv[0]] }); });
+    review = { id: r.id, range: r.range || '', fields: fields };
+   }
+  });
+  var tagline = '本周共专注 ' + UI.fmtMin(focus) + '，完成 ' + done + ' / ' + taskTotal + ' 项计划，运动 ' + fitCount + ' 次。';
+  return {
+   mon: start, sun: sun, week: wk, range: start.slice(5).replace('-', '/') + ' - ' + sun.slice(5).replace('-', '/'),
+   focusMin: focus, pomos: pomos, done: done, taskTotal: taskTotal,
+   fitCount: fitCount, fitMin: fitMin, water: water, sleepDays: sleepDays, ideasDone: ideasDone,
+   daily: daily, budget: budget, funds: funds, fundsTotal: fundsTotal, review: review, tagline: tagline
+  };
+ }
+ /** 该周（mon 起）是否产生过任何数据 */
+ function weekHasData(mon) {
+  for (var i = 0; i < 7; i++) {
+   var d = shift(mon, i);
+   var day = state.days[d];
+   if (day && ((day.tasks || []).some(function (t) { return t.done; }) || (day.focusMin || 0) > 0 || (day.pomos || 0) > 0)) return true;
+   if ((state.fitness.logs[d] || []).length) return true;
+   var h = state.health[d];
+   if (h && ((h.water || 0) > 0 || (h.sleepAt && h.wakeAt) || (h.meals && h.meals.length))) return true;
+  }
+  return false;
+ }
+ /** 归档某一周：生成快照写入 summaries（同周不重复） */
+ function archiveWeek(mon) {
+  mon = mon || monday();
+  var wk = weekKey(mon);
+  var exist = false;
+  (state.summaries || []).forEach(function (s) { if (s.week === wk) exist = true; });
+  if (exist) return null;
+  var st = genWeekStats(mon);
+  var obj = {
+   id: uid(), week: wk, mon: st.mon, sun: st.sun, range: st.range,
+   generatedAt: Date.now(),
+   focusMin: st.focusMin, pomos: st.pomos, done: st.done, taskTotal: st.taskTotal,
+   fitCount: st.fitCount, fitMin: st.fitMin, water: st.water, sleepDays: st.sleepDays,
+   ideasDone: st.ideasDone, daily: st.daily,
+   budget: st.budget, funds: st.funds, fundsTotal: st.fundsTotal,
+   review: st.review, tagline: st.tagline, note: ''
+  };
+  state.summaries = state.summaries || [];
+  state.summaries.unshift(obj);
+  save();
+  return obj;
+ }
+ /** 自动归档已结束的过去若干周（静态 PWA 的「每周自动」实现）：进入应用 / 进入本页时调用 */
+ function autoArchiveWeeks(limit) {
+  limit = limit || 16;
+  var thisMon = monday();
+  var archived = 0;
+  for (var w = 1; w <= limit; w++) {
+   var mon = shift(thisMon, -7 * w);
+   if (!weekHasData(mon)) continue;
+   if (archiveWeek(mon)) archived++;
+  }
+  return archived;
+ }
+ function removeSummary(id) {
+  state.summaries = (state.summaries || []).filter(function (x) { return x.id !== id; });
+  save();
+ }
+ function updateSummary(id, data) {
+  var s = null;
+  (state.summaries || []).forEach(function (x) { if (x.id === id) s = x; });
+  if (!s) return;
+  for (var k in data) if (data.hasOwnProperty(k)) s[k] = data[k];
+  save();
+ }
+
  /* ---------- 导出 ---------- */
  global.Store = {
   get state() { return state; },
@@ -715,6 +832,8 @@ function addBudgetSaved(amount) {
   totalFocusMinutes: totalFocusMinutes, availablePoints: availablePoints, earnedPoints: earnedPoints,
   addReward: addReward, updateReward: updateReward, removeReward: removeReward, redeem: redeem,
   curMonth: curMonth, setBudget: setBudget, addExpense: addExpense, removeExpense: removeExpense,
-  budgetSpent: budgetSpent, budgetRemaining: budgetRemaining
+  budgetSpent: budgetSpent, budgetRemaining: budgetRemaining,
+  genWeekStats: genWeekStats, weekHasData: weekHasData, archiveWeek: archiveWeek,
+  autoArchiveWeeks: autoArchiveWeeks, removeSummary: removeSummary, updateSummary: updateSummary
  };
 })(window);
