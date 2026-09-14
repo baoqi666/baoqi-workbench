@@ -143,5 +143,26 @@
 <script src="assets/js/pages/dream.js"></script>
 <script src="assets/js/pages/reward.js"></script>
 <script src="assets/js/app.js"></script>
+<script>
+/* 版本探测：发现线上版本变化自动重载，解决客户端缓存导致界面不更新 */
+(function () {
+ try {
+  var KEY = 'catdesk_build', SKEY = 'catdesk_reloaded';
+  fetch('version.json?_=' + Date.now(), { cache: 'no-store' })
+   .then(function (r) { return r.json(); })
+   .then(function (remote) {
+    if (!remote || !remote.build) return;
+    var local = localStorage.getItem(KEY);
+    if (local !== remote.build) {
+     localStorage.setItem(KEY, remote.build);
+     if (!sessionStorage.getItem(SKEY)) {
+      sessionStorage.setItem(SKEY, '1');
+      location.reload(true);
+     }
+    }
+   }).catch(function () {});
+ } catch (e) {}
+})();
+</script>
 </body>
 </html>
