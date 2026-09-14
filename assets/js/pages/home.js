@@ -122,7 +122,6 @@
      '<button class="pill-btn' + (on ? ' plain' : '') + '" id="pushToggle">' + label + '</button></div>' +
     '<div class="push-grid">' +
      pushRow('出门', c.week ? c.week.name : '—', c.week ? c.week.tip : '本周推荐一个长沙去处') +
-     pushRow('今日一句', '自信表达', c.sentence || '今天也要好好说话') +
      pushRow('健康', '小知识', c.health || '照顾好身体') +
     '</div>' +
    '</div>';
