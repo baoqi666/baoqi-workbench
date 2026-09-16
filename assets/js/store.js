@@ -51,6 +51,7 @@
    createdAt: today(),
    profile: { name: '喵の工作台', energyMax: 100, waterGoal: 5, kcalGoal: 1800 },
    streak: { count: 0, last: '', dates: [] },
+   rpg: { xp: 0 },
    stats: {
     english:  { min: 0, count: 0 },
     knowledge: { min: 0, count: 0 },
@@ -97,6 +98,8 @@
     if (raw.redeemed == null) raw.redeemed = 0;
     if (!raw.budget || !raw.budget.expenses) raw.budget = { month: '', amount: 0, expenses: [], settledMonth: '' };
     if (!raw.summaries) raw.summaries = [];
+    if (!raw.rpg || typeof raw.rpg !== 'object') raw.rpg = { xp: 0 };
+    if (raw.rpg.xp == null) raw.rpg.xp = 0;
     // 迁移：历史已完成的任务（未走过计时器、无 doneCredit）补记预计时长为积分来源
     Object.keys(raw.days || {}).forEach(function (dt) {
      (raw.days[dt].tasks || []).forEach(function (t) {
@@ -362,8 +365,40 @@
   st.dates = (st.dates || []).filter(function (d) { return diffDays(td, d) < 60; });
   if (st.dates.indexOf(td) < 0) st.dates.push(td);
   save();
+  // 人生 RPG：打卡获得经验（连击越高加成越多，封顶 +30）
+  if (state.rpg && typeof state.rpg === 'object') {
+   var gain = 10 + Math.min(st.count, 20);
+   state.rpg.xp = (state.rpg.xp || 0) + gain;
+   save();
+  }
   return st.count;
- }
+}
+
+/* ---------- 人生 RPG（游戏化打卡） ---------- */
+var LIFESPAN_DAYS = 80 * 365.25; // 预期寿命 ≈ 29220 天
+/** 登陆地球天数 = 自账号创建（首次打开）起算，含今天 */
+function daysOnEarth() { return diffDays(today(), state.createdAt) + 1; }
+/** 人生进度百分比（相对预期寿命） */
+function lifeProgress() { return daysOnEarth() / LIFESPAN_DAYS * 100; }
+/** 总经验 = 打卡累积经验 + 专注时长折算（每 120 分钟 +1） */
+function lifeXP() { return (state.rpg.xp || 0) + Math.floor(totalFocusMinutes() / 120); }
+/** 由总经验推导玩家等级与升级进度 */
+function playerLevel() {
+  var xp = lifeXP(), lvl = 1, need = 50;
+  while (xp >= need) { xp -= need; lvl++; need = Math.round(need * 1.35); }
+  return { level: lvl, cur: xp, next: need, remain: need - xp };
+}
+/** 人物属性：体魄 / 心情 / 知识（由真实行为数据派生） */
+function rpgAttrs() {
+  var fit = 0, i;
+  for (i = 0; i < 30; i++) { var dt = shift(today(), -i); fit += (state.fitness.logs[dt] || []).length; }
+  var physique = Math.floor(fit / 4);
+  var tr = trend(7), sum = 0, cnt = 0;
+  tr.forEach(function (x) { var e = energyOf(x.date); if (e.max) { sum += e.left / e.max * 100; cnt++; } });
+  var mood = Math.floor((cnt ? sum / cnt : 0) / 20);
+  var knowledge = Math.floor((state.stats.knowledge.min || 0) / 120);
+  return { physique: physique, mood: mood, knowledge: knowledge };
+}
 
  /* ---------- 统计 ---------- */
  function lastDays(n) {
@@ -868,6 +903,8 @@ function addBudgetSaved(amount) {
   findTask: findTask, toggleTask: toggleTask, chargePomo: chargePomo,
   addFocus: addFocus, addPomo: addPomo, addCharge: addCharge, addOutput: addOutput, rollover: rollover,
   checkin: checkin, trend: trend, lastDays: lastDays, totalFocus: totalFocus,
+  daysOnEarth: daysOnEarth, lifeProgress: lifeProgress, lifeXP: lifeXP,
+  playerLevel: playerLevel, rpgAttrs: rpgAttrs,
   addIdea: addIdea, toggleIdea: toggleIdea, setIdeaFeel: setIdeaFeel, removeIdea: removeIdea,
   fitLogs: fitLogs, addFitLog: addFitLog, removeFitLog: removeFitLog,
   fitWeekCount: fitWeekCount, fitMonthMinutes: fitMonthMinutes,
