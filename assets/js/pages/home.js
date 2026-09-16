@@ -7,14 +7,17 @@
 
  function pointsCard() {
   var ap = Store.availablePoints();
-  var mins = Store.totalFocusMinutes();
+  var lv = Store.playerLevel();
+  var attrs = Store.rpgAttrs();
   return '' +
    '<div class="points-card" id="pointsCard" data-go="reward">' +
     '<div class="ic">' + Icons.cat('reward') + '</div>' +
     '<div class="grow">' +
-     '<div class="pc-label">我的积分</div>' +
-     '<div class="pc-num">' + ap + '<small> 分</small></div>' +
-     '<div class="pc-sub">已专注 ' + UI.fmtMin(mins) + ' · 每 60 分钟得 1 分</div>' +
+     '<div class="pc-label">玩家等级</div>' +
+     '<div class="pc-num">LV.' + lv.level + '<small> 级</small></div>' +
+     '<div class="pc-sub">经验 ' + Store.lifeXP() + ' · 距下一级还差 ' + lv.remain + '</div>' +
+     '<div class="pc-sub">人物属性　体魄 ' + attrs.physique + ' · 心情 ' + attrs.mood + ' · 知识 ' + attrs.knowledge + '</div>' +
+     '<div class="pc-sub">积分 ' + ap + ' 可兑换奖励</div>' +
     '</div>' +
     '<div class="pc-go">去兑换 ›</div>' +
    '</div>';
@@ -27,11 +30,18 @@
    var on = (st.dates || []).indexOf(dt) >= 0;
    return '<div class="d' + (on ? ' on' : '') + '">' + Store.weekShort(dt) + '<b>' + (on ? '✓' : '·') + '</b></div>';
   }).join('');
+  var earth = Store.daysOnEarth();
+  var prog = Store.lifeProgress();
+  var pText = prog >= 1 ? prog.toFixed(1) : (prog >= 0.1 ? prog.toFixed(2) : (prog >= 0.01 ? prog.toFixed(3) : '<0.01'));
   return '' +
    '<div class="streak-card pop">' +
     '<div class="cat">' + Icons.streakArt() + '</div>' +
     '<div class="k">连续打卡</div>' +
     '<div class="v">' + st.count + '<small>天</small></div>' +
+    '<div class="k" style="margin-top:2px">已登陆地球</div>' +
+    '<div class="v">' + earth + '<small>天</small></div>' +
+    '<div class="k" style="margin-top:2px">人生进度</div>' +
+    '<div class="v">' + pText + '<small>%</small></div>' +
     '<div class="k" style="margin-top:2px">累计专注 ' + UI.fmtMin(Store.totalFocus()) + '</div>' +
     '<div class="streak-days">' + cells + '</div>' +
    '</div>';
@@ -99,7 +109,7 @@
   var data = tr.map(function (x) { return { label: x.label, value: x.done, hi: x.date === td }; });
   return '' +
    '<div class="card">' +
-    '<div class="sec-title"><h2><span class="bar-mark"></span>近 7 天完成任务数</h2></div>' +
+    '<div class="sec-title"><h2><span class="bar-mark"></span>近期活跃度 · 完成任务</h2></div>' +
     UI.barChart(data, { height: 104 }) +
    '</div>';
  }
