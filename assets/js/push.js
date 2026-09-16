@@ -50,11 +50,12 @@
  function current() {
   var td = Store.today();
   var ws = Store.weekKey(td);
-  var C = global.PushContent || { changsha: [], sentences: [], health: [] };
+  var C = global.PushContent || { changsha: [], sentences: [], health: [], beauty: [] };
   return {
    week: pick(C.changsha, ws),
    sentence: pick(C.sentences, td),
-   health: pick(C.health, td)
+   health: pick(C.health, td),
+   beauty: pick(C.beauty, td)
   };
  }
 
@@ -116,6 +117,7 @@
     var ty = (it.extra && it.extra.type);
     if (ty === 'week') c.schedule = { on: { weekday: 2, hour: 9, minute: 0 } };
     else if (ty === 'sentence') c.schedule = { on: { hour: 8, minute: 0 } };
+    else if (ty === 'beauty') c.schedule = { on: { hour: 21, minute: 0 } };
     else c.schedule = { on: { hour: 20, minute: 0 } };
     return c;
    });
@@ -147,7 +149,7 @@
    m.week = wKey;
   }
 
-  // 每日 8:00 句子（通知只放短引导，全文在自信表达模块）
+  // 每日 8:00 句子（通知只放短引导，全文在玉琢模块）
   var sf = nextDailyFire(8, 0);
   var sKey = isoDate(sf);
   if (m.sentence !== sKey) {
@@ -172,6 +174,20 @@
     schedule: { at: hf }, extra: { type: 'health' }
    });
    m.health = hKey;
+  }
+
+  // 每日 21:00 美商修炼（玉琢模块）
+  var bf = nextDailyFire(21, 0);
+  var bKey = isoDate(bf);
+  if (m.beauty !== bKey) {
+   await cancelNative([ID.beauty]);
+   var bObj = pick(C.beauty, bKey) || {};
+   sched.push({
+    id: ID.beauty, title: '美商修炼 · 今日',
+    body: bObj.brief || '今天提升一点审美眼光',
+    schedule: { at: bf }, extra: { type: 'beauty' }
+   });
+   m.beauty = bKey;
   }
 
   if (sched.length) await doSchedule(LN, sched);
