@@ -158,7 +158,7 @@
      '<div><b>' + (t.cycle % Timer.CONF.longEvery) + '/4</b>距长休</div>' +
     '</div>' +
     '<div class="tomato-row">' + dots + '</div>' +
-    '<div class="muted" style="margin-top:10px;font-size:11.5px">点击任务右侧 ▶ 可绑定该任务，番茄完成后自动累计专注时长（精力在创建任务时已扣除）</div>' +
+    '<div class="muted" style="margin-top:10px;font-size:var(--fs-4)">点击任务右侧 ▶ 可绑定该任务，番茄完成后自动累计专注时长（精力在创建任务时已扣除）</div>' +
    '</div>';
  }
 
@@ -193,10 +193,10 @@
       '<span class="tag ' + cat.tag + '">' + cat.name + '</span>' +
       (t.tag !== 'other' ? '<span class="tag ' + tg.tag + '">' + tg.name + '</span>' : '') +
       '<span class="tag gray">' + pr.name + '优先</span>' +
-      '<span class="muted" style="font-size:11px">⏳' + t.estMin + '分</span>' +
-      '<span class="muted" style="font-size:11px;color:' + (t.cat === 'charge' ? '#2c9a70' : '#c9803a') + '">' + sign + en + '</span>' +
-      (t.pomos ? '<span class="muted" style="font-size:11px">番茄 ' + t.pomos + '</span>' : '') +
-      (t.focusMin ? '<span class="muted" style="font-size:11px">已投入' + t.focusMin + '分</span>' : '') +
+      '<span class="muted" style="font-size:var(--fs-4)">⏳' + t.estMin + '分</span>' +
+      '<span class="muted" style="font-size:var(--fs-4);color:' + (t.cat === 'charge' ? '#2c9a70' : '#c9803a') + '">' + sign + en + '</span>' +
+      (t.pomos ? '<span class="muted" style="font-size:var(--fs-4)">番茄 ' + t.pomos + '</span>' : '') +
+      (t.focusMin ? '<span class="muted" style="font-size:var(--fs-4)">已投入' + t.focusMin + '分</span>' : '') +
       (t.carried ? '<span class="tag orange">昨日留存</span>' : '') +
      '</div>' +
     '</div>' +
@@ -221,10 +221,10 @@
     '<div class="group-head">' +
      '<div class="gh-ic">' + Icons.cat(iconKey, { radius: 9, badge: false }) + '</div>' +
      '<b>' + cat.name + '</b><span>· ' + cat.desc + '</span>' +
-     '<span style="margin-left:auto;font-size:11.5px" class="muted">' + doneN + '/' + list.length + ' · ' +
+     '<span style="margin-left:auto;font-size:var(--fs-4)" class="muted">' + doneN + '/' + list.length + ' · ' +
      (catKey === 'charge' ? '+' : '-') + sum + '</span>' +
     '</div>' +
-    (list.length ? list.map(taskItem).join('') : '<div class="muted" style="padding:6px 4px 10px;font-size:12.5px">暂无任务</div>') +
+    (list.length ? list.map(taskItem).join('') : '<div class="muted" style="padding:6px 4px 10px;font-size:var(--fs-4)">暂无任务</div>') +
    '</div>';
  }
 
@@ -338,8 +338,8 @@
   return '<div class="card tight row" style="margin-bottom:14px">' +
    '<button class="mini-act" data-nav="-1"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg></button>' +
    '<div class="grow" style="text-align:center">' +
-    '<b style="font-size:14.5px">' + cn[1] + ' 月 ' + cn[2] + ' 日 · ' + Store.weekName(d()) + '</b>' +
-    '<div class="muted" style="font-size:11px">' + (isToday() ? '今天' : (d() < Store.today() ? '历史记录' : '未来计划')) + '</div>' +
+    '<b style="font-size:var(--fs-3)">' + cn[1] + ' 月 ' + cn[2] + ' 日 · ' + Store.weekName(d()) + '</b>' +
+    '<div class="muted" style="font-size:var(--fs-4)">' + (isToday() ? '今天' : (d() < Store.today() ? '历史记录' : '未来计划')) + '</div>' +
    '</div>' +
    '<button class="mini-act" data-nav="1"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M9 5l7 7-7 7"/></svg></button>' +
    '</div>';
