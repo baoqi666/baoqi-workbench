@@ -44,7 +44,7 @@
     '<div class="k" style="margin-top:2px">人生进度</div>' +
     '<div class="v">' + pText + '<small>%</small></div>' +
     '<div class="k" style="margin-top:2px">累计专注 ' + UI.fmtMin(Store.totalFocus()) + '</div>' +
-    '<div id="birthEdit" style="margin-top:8px;font-size:12.5px;color:#5a7d70;cursor:pointer">' + (birth ? ('出生于 ' + birth + ' · 点击修改') : '设置出生日期 ›') + '</div>' +
+    '<div id="birthEdit" style="margin-top:8px;font-size:var(--fs-4);color:var(--brand-ink);cursor:pointer">' + (birth ? ('出生于 ' + birth + ' · 点击修改') : '设置出生日期 ›') + '</div>' +
     '<div class="streak-days">' + cells + '</div>' +
    '</div>';
  }
@@ -53,7 +53,7 @@
   var cur = Store.state.birth || '';
   UI.sheet(
    '<h3>出生日期</h3>' +
-   '<p class="muted" style="text-align:center;margin:0 0 16px;font-size:13px">用于计算「已登陆地球」天数与人生进度，直接输入即可</p>' +
+   '<p class="muted" style="text-align:center;margin:0 0 16px;font-size:var(--fs-3)">用于计算「已登陆地球」天数与人生进度，直接输入即可</p>' +
    '<div class="field"><label>出生日期</label>' +
     '<input type="text" id="birthInput" inputmode="numeric" placeholder="例如 1998-05-20 或 1998/5/20" value="' + esc(cur) + '"/></div>' +
    '<div class="sheet-actions">' +
@@ -87,7 +87,7 @@
     '<div class="ic">' + Icons.cat(key, { radius: 12 }) + '</div>' +
     '<div class="num">' + UI.fmtMinShort(s.min) + '</div>' +
     '<div class="lb">' + label + '</div>' +
-    '<div class="sub">' + sub + ' <b style="color:#5a7d70">' + s.count + '</b> 次</div>' +
+    '<div class="sub">' + sub + ' <b style="color:var(--brand-ink)">' + s.count + '</b> 次</div>' +
    '</div>';
  }
 
@@ -107,13 +107,13 @@
     '<div class="row" style="gap:16px">' +
      UI.donut(pct, { size: 92, stroke: 11, text: pct + '%', fontSize: 19 }) +
      '<div class="grow">' +
-      '<div class="row" style="justify-content:space-between;font-size:13px;margin-bottom:7px">' +
+      '<div class="row" style="justify-content:space-between;font-size:var(--fs-3);margin-bottom:7px">' +
        '<span class="muted">计划完成</span><b>' + done + ' / ' + total + '</b></div>' +
-      '<div class="row" style="justify-content:space-between;font-size:13px;margin-bottom:7px">' +
-       '<span class="muted">剩余精力</span><b style="color:#5a7d70">' + e.left + '</b></div>' +
-      '<div class="row" style="justify-content:space-between;font-size:13px;margin-bottom:7px">' +
+      '<div class="row" style="justify-content:space-between;font-size:var(--fs-3);margin-bottom:7px">' +
+       '<span class="muted">剩余精力</span><b style="color:var(--brand-ink)">' + e.left + '</b></div>' +
+      '<div class="row" style="justify-content:space-between;font-size:var(--fs-3);margin-bottom:7px">' +
        '<span class="muted">今日番茄</span><b>' + (day.pomos || 0) + '</b></div>' +
-      '<div class="row" style="justify-content:space-between;font-size:13px">' +
+      '<div class="row" style="justify-content:space-between;font-size:var(--fs-3)">' +
        '<span class="muted">饮水 / 运动</span><b>' + (h.water || 0) + ' 杯 · ' + fit + ' 项</b></div>' +
      '</div>' +
     '</div>' +
@@ -161,7 +161,7 @@ function render() {
    todayCard() +
    trendCard() +
    energyTrendCard() +
-   '<div class="muted" style="text-align:center;font-size:11.5px;padding:4px 0 20px">' +
+   '<div class="muted" style="text-align:center;font-size:var(--fs-4);padding:4px 0 20px">' +
     '数据由「每日计划」的番茄钟 / 正计时自动同步汇总</div>' +
    '</div>';
  }
@@ -174,7 +174,7 @@ function render() {
     '<div class="ic">' + Icons.cat('timer', { radius: 12 }) + '</div>' +
     '<div class="num">' + UI.fmtMinShort(all) + '</div>' +
     '<div class="lb">累计专注总时长</div>' +
-    '<div class="sub">其他事务 <b style="color:#5a7d70">' + s.count + '</b> 次</div>' +
+    '<div class="sub">其他事务 <b style="color:var(--brand-ink)">' + s.count + '</b> 次</div>' +
    '</div>';
  }
 
@@ -185,7 +185,7 @@ function render() {
     '<div class="ic">' + Icons.cat('express', { radius: 12 }) + '</div>' +
     '<div class="num">' + UI.fmtMinShort(s.min) + '</div>' +
     '<div class="lb">口语输出时长</div>' +
-    '<div class="sub">玉琢 <b style="color:#5a7d70">' + s.count + '</b> 次</div>' +
+    '<div class="sub">玉琢 <b style="color:var(--brand-ink)">' + s.count + '</b> 次</div>' +
    '</div>';
  }
 
