@@ -123,7 +123,7 @@
   var head = '<div class="sec-title"><h2><span class="bar-mark"></span>本月预算</h2><span class="more">' + m + '</span></div>';
   if (!b.amount) {
     return head + '<div class="card budget-card">' +
-      '<div class="muted" style="font-size:13px">设置本月预算，花掉后剩下的钱会自动变成可存入梦想储蓄罐的金额。</div>' +
+      '<div class="muted" style="font-size:var(--fs-3)">设置本月预算，花掉后剩下的钱会自动变成可存入梦想储蓄罐的金额。</div>' +
       '<div class="field" style="margin-top:12px"><label>本月预算（元）</label>' +
         '<input type="number" id="bAmt" min="1" step="100" placeholder="例如 5000"/></div>' +
       '<button class="pill-btn" id="bSet" style="width:100%;justify-content:center">设定本月预算</button>' +
@@ -144,7 +144,7 @@
       '<span class="exp-note">' + (e.note ? esc(e.note) : '') + '</span>' +
       '<span class="exp-amt">-' + money(e.amount) + '</span>' +
       '<button class="exp-del" data-act="del" aria-label="删除">✕</button></div>';
-  }).join('') + '</div>' : '<div class="muted" style="font-size:12px;margin-top:6px">还没有支出记录</div>';
+  }).join('') + '</div>' : '<div class="muted" style="font-size:var(--fs-4);margin-top:6px">还没有支出记录</div>';
   return head + '<div class="card budget-card">' + stats + acts + exp + '</div>';
  }
 
@@ -185,9 +185,9 @@
 
   var summary = '<div class="card dream-summary">' +
    '<div class="row" style="gap:12px">' +
-    '<div style="width:46px;height:46px;border-radius:14px;overflow:hidden;flex:none">' + Icons.cat('dream') + '</div>' +
-    '<div class="grow"><b style="font-size:16px">梦想储蓄罐</b>' +
-     '<div class="muted" style="font-size:12px">已存 ' + money(totalBal) + ' / 目标 ' + money(totalTgt) + ' 元</div></div>' +
+    '<div style="width:46px;height:46px;border-radius:var(--r-m);overflow:hidden;flex:none">' + Icons.cat('dream') + '</div>' +
+    '<div class="grow"><b style="font-size:var(--fs-2)">梦想储蓄罐</b>' +
+     '<div class="muted" style="font-size:var(--fs-4)">已存 ' + money(totalBal) + ' / 目标 ' + money(totalTgt) + ' 元</div></div>' +
     '<div class="dream-overall"><b>' + overall + '%</b></div>' +
    '</div>' +
    '<div class="fund-prog" style="margin-top:12px"><i style="width:' + overall + '%"></i></div>' +
