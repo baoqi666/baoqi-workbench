@@ -33,6 +33,7 @@
   var earth = Store.daysOnEarth();
   var prog = Store.lifeProgress();
   var pText = prog >= 1 ? prog.toFixed(1) : (prog >= 0.1 ? prog.toFixed(2) : (prog >= 0.01 ? prog.toFixed(3) : '<0.01'));
+  var birth = Store.state.birth || '';
   return '' +
    '<div class="streak-card pop">' +
     '<div class="cat">' + Icons.streakArt() + '</div>' +
@@ -43,8 +44,40 @@
     '<div class="k" style="margin-top:2px">人生进度</div>' +
     '<div class="v">' + pText + '<small>%</small></div>' +
     '<div class="k" style="margin-top:2px">累计专注 ' + UI.fmtMin(Store.totalFocus()) + '</div>' +
+    '<div id="birthEdit" style="margin-top:8px;font-size:12.5px;color:#5a7d70;cursor:pointer">' + (birth ? ('出生于 ' + birth + ' · 点击修改') : '设置出生日期 ›') + '</div>' +
     '<div class="streak-days">' + cells + '</div>' +
    '</div>';
+ }
+
+ function birthSheet() {
+  var cur = Store.state.birth || '';
+  UI.sheet(
+   '<h3>出生日期</h3>' +
+   '<p class="muted" style="text-align:center;margin:0 0 16px;font-size:13px">用于计算「已登陆地球」天数与人生进度</p>' +
+   '<div class="field"><label>出生日期</label>' +
+    '<input type="date" id="birthInput" value="' + esc(cur) + '" max="' + Store.today() + '"/></div>' +
+   '<div class="sheet-actions">' +
+    (cur ? '<button class="btn-ghost" data-act="clear">清除</button>' : '<button class="btn-ghost" data-act="cancel">取消</button>') +
+    '<button class="btn-primary" data-act="ok">保存</button></div>',
+   function (el) {
+    var c = el.querySelector('[data-act=cancel]'); if (c) c.onclick = UI.closeSheet;
+    var cl = el.querySelector('[data-act=clear]');
+    if (cl) cl.onclick = function () {
+     Store.setBirth('');
+     UI.closeSheet();
+     App.go('home');
+     UI.toast('已清除出生日期');
+    };
+    el.querySelector('[data-act=ok]').onclick = function () {
+     var v = el.querySelector('#birthInput').value;
+     if (!v) { UI.toast('请选择出生日期'); return; }
+     if (!Store.setBirth(v)) { UI.toast('日期不合法'); return; }
+     UI.closeSheet();
+     App.go('home');
+     UI.toast('已记录 · 人生进度已按真实年龄计算');
+    };
+   }
+  );
  }
 
  function statCard(key, label, sub) {
@@ -191,6 +224,8 @@
   root = root || UI.$('#view');
   var pc = root.querySelector('#pointsCard');
   if (pc) pc.onclick = function () { App.go('reward'); };
+  var be = root.querySelector('#birthEdit');
+  if (be) be.onclick = function () { birthSheet(); };
   var pt = root.querySelector('#pushToggle');
   if (pt) pt.onclick = function () {
    pt.disabled = true;
