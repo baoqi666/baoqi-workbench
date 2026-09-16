@@ -929,7 +929,7 @@ function addBudgetSaved(amount) {
   addIdea: addIdea, toggleIdea: toggleIdea, setIdeaFeel: setIdeaFeel, removeIdea: removeIdea,
   fitLogs: fitLogs, addFitLog: addFitLog, removeFitLog: removeFitLog,
   fitWeekCount: fitWeekCount, fitMonthMinutes: fitMonthMinutes,
-  addTodo: addTodo, toggleTodo: toggleTodo, removeTodo: removeTodo, sortedTodos: sortedTodos,
+  addTodo: addTodo, updateTodo: updateTodo, toggleTodo: toggleTodo, removeTodo: removeTodo, sortedTodos: sortedTodos,
   addFund: addFund, updateFund: updateFund, removeFund: removeFund, depositFund: depositFund,
   curMonth: curMonth, getBudget: getBudget, setBudgetAmount: setBudgetAmount,
   addExpense: addExpense, removeExpense: removeExpense, budgetLeft: budgetLeft, addBudgetSaved: addBudgetSaved,
