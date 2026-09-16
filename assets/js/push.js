@@ -218,6 +218,70 @@
   } catch (e) {}
  }
 
+ /* ---------------- 待办提醒（精确时刻，支持提前量） ---------------- */
+ var _todoTimers = {};
+ /* 原生通知 id 区间 5000~8999，避开固定推送（2001~2004） */
+ function todoRemindId(date, id) { return 5000 + (hash(date + '|' + id) % 4000); }
+ /* 计算提醒触发时刻（date 当天 + time - 提前量分钟） */
+ function todoFireAt(date, time, remind) {
+  var p = (time || '').split(':');
+  if (p.length < 2) return null;
+  var d = Store.parse(date);
+  d.setHours(+p[0], +p[1], 0, 0);
+  if (remind > 0) d.setMinutes(d.getMinutes() - remind);
+  return d;
+ }
+ /* 到点触发：应用内 toast 永远有效；网页环境再补一条系统通知 */
+ function fireTodoReminder(t) {
+  try { if (UI && UI.toast) UI.toast('待办提醒：' + (t.title || '')); } catch (e) {}
+  try {
+   if (!nativeLN() && ('Notification' in window) && Notification.permission === 'granted') {
+    new Notification('待办提醒', { body: (t.title || '') + (t.time ? ' · ' + t.time : '') });
+   }
+  } catch (e) {}
+ }
+ /* 重新排程今日所有带提醒的待办：原生 LocalNotifications（关 App 也能弹）+ in-app 定时器（打开时弹） */
+ async function scheduleTodoReminders() {
+  Object.keys(_todoTimers).forEach(function (k) { clearTimeout(_todoTimers[k]); delete _todoTimers[k]; });
+  var td = Store.today();
+  var todos = Store.sortedTodos(td) || [];
+  var ln = nativeLN();
+  var natItems = [];
+  var now = Date.now();
+  todos.forEach(function (t) {
+   if (t.done) return;
+   if (t.remind == null || t.remind < 0) return;
+   if (!t.time) return;
+   var at = todoFireAt(td, t.time, t.remind);
+   if (!at || at.getTime() <= now) return; // 已过时刻不再排
+   if (ln) {
+    natItems.push({
+     id: todoRemindId(td, t.id), title: '待办提醒',
+     body: (t.title || '') + (t.time ? ' · ' + t.time : ''),
+     schedule: { at: at }, extra: { type: 'todo' }
+    });
+   }
+   var delay = at.getTime() - now;
+   if (delay > 0 && delay < 86400000 * 2) {
+    var key = td + '|' + t.id;
+    _todoTimers[key] = setTimeout(function () { fireTodoReminder(t); }, delay);
+   }
+  });
+  if (ln && natItems.length) {
+   try {
+    var perm = await ensurePermission();
+    if (perm === 'granted') await doSchedule(ln, natItems);
+   } catch (e) {}
+  }
+ }
+ /* 取消某条待办的提醒（删除 / 勾选完成时调用） */
+ async function cancelTodoReminder(date, id) {
+  var key = date + '|' + id;
+  if (_todoTimers[key]) { clearTimeout(_todoTimers[key]); delete _todoTimers[key]; }
+  var ln = nativeLN();
+  if (ln) { try { await cancelNative([todoRemindId(date, id)]); } catch (e) {} }
+ }
+
  /* 主入口：进入应用时调用，自动按周期排程 */
  async function sync() {
   var ok = await scheduleNative();
