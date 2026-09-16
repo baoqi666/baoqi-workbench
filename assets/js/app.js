@@ -42,10 +42,63 @@
   $('#splashTime').textContent = (d.getHours() < 10 ? '0' : '') + d.getHours() + ':' + (d.getMinutes() < 10 ? '0' : '') + d.getMinutes();
  }
 
+ /* ---------------- 开屏：出门地点 + 开福区天气 ---------------- */
+ function wxCodeText(code) {
+  var map = { 0: '晴', 1: '大致晴朗', 2: '局部多云', 3: '阴', 45: '雾', 48: '雾凇',
+   51: '毛毛雨', 53: '毛毛雨', 55: '毛毛雨', 56: '冻毛毛雨', 57: '冻毛毛雨',
+   61: '小雨', 63: '中雨', 65: '大雨', 66: '冻雨', 67: '冻雨',
+   71: '小雪', 73: '中雪', 75: '大雪', 77: '雪粒',
+   80: '阵雨', 81: '阵雨', 82: '强阵雨', 85: '阵雪', 86: '阵雪',
+   95: '雷阵雨', 96: '雷阵雨伴冰雹', 99: '雷阵雨伴冰雹' };
+  return map[code] || '多云';
+ }
+
+ function paintSplashPlace() {
+  var tEl = $('#placeText'), tipEl = $('#placeTip');
+  if (!tEl) return;
+  var c = (global.Push && Push.current) ? Push.current() : {};
+  if (c.week) { tEl.textContent = c.week.name; if (tipEl) tipEl.textContent = c.week.tip; }
+  else { tEl.textContent = '出去走走'; if (tipEl) tipEl.textContent = '换换心情'; }
+ }
+
+ function paintWeather() {
+  var el = $('#weatherText'); if (!el) return;
+  var td = Store.today();
+  var cacheKey = 'catdesk.weather.' + td;
+  function render(w) {
+   if (!w) { el.textContent = '联网后显示开福区天气'; return; }
+   el.innerHTML = w.temp + '° · ' + w.text +
+    '<span style="font-size:12px;color:var(--ink-3);font-weight:600;margin-left:6px">最高 ' + w.max + '° 最低 ' + w.min + '°</span>';
+  }
+  try {
+   var cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
+   if (cached) { render(cached); return; }
+  } catch (e) {}
+  if (typeof fetch !== 'function') { render(null); return; }
+  var url = 'https://api.open-meteo.com/v1/forecast?latitude=28.2278&longitude=112.9389' +
+   '&current=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min' +
+   '&timezone=Asia%2FShanghai&forecast_days=1';
+  fetch(url, { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (d) {
+   try {
+    var cur = d.current || {}; var dy = d.daily || {};
+    var w = {
+     temp: Math.round(cur.temperature_2m),
+     text: wxCodeText(cur.weather_code),
+     max: Math.round((dy.temperature_2m_max || [0])[0]),
+     min: Math.round((dy.temperature_2m_min || [0])[0])
+    };
+    try { localStorage.setItem(cacheKey, JSON.stringify(w)); } catch (e2) {}
+    render(w);
+   } catch (e) { render(null); }
+  }).catch(function () { render(null); });
+ }
+
  function initSplash() {
   $('#splashCat').innerHTML = Icons.splash();
   paintSplashTime();
   paintQuote(false);
+  paintSplashPlace();
+  paintWeather();
   setInterval(paintSplashTime, 20000);
 
   $('#quoteRefresh').addEventListener('click', function (e) {
