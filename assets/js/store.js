@@ -500,7 +500,19 @@ function rpgAttrs() {
  function addTodo(date, data) {
   day(date).todos.push({
    id: uid(), title: data.title, time: data.time || '',
-   done: false, createdAt: Date.now()
+   remind: data.remind || '', done: false, createdAt: Date.now()
+  });
+  save();
+ }
+ function updateTodo(date, id, data) {
+  var list = day(date).todos;
+  list.forEach(function (t) {
+   if (t.id === id) {
+    if (data.title !== undefined) t.title = data.title;
+    if (data.time !== undefined) t.time = data.time;
+    if (data.remind !== undefined) t.remind = data.remind;
+    if (data.done !== undefined) { t.done = data.done; t.doneAt = data.done ? Date.now() : null; }
+   }
   });
   save();
  }
