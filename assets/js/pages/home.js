@@ -53,9 +53,9 @@
   var cur = Store.state.birth || '';
   UI.sheet(
    '<h3>出生日期</h3>' +
-   '<p class="muted" style="text-align:center;margin:0 0 16px;font-size:13px">用于计算「已登陆地球」天数与人生进度</p>' +
+   '<p class="muted" style="text-align:center;margin:0 0 16px;font-size:13px">用于计算「已登陆地球」天数与人生进度，直接输入即可</p>' +
    '<div class="field"><label>出生日期</label>' +
-    '<input type="date" id="birthInput" value="' + esc(cur) + '" max="' + Store.today() + '"/></div>' +
+    '<input type="text" id="birthInput" inputmode="numeric" placeholder="例如 1998-05-20 或 1998/5/20" value="' + esc(cur) + '"/></div>' +
    '<div class="sheet-actions">' +
     (cur ? '<button class="btn-ghost" data-act="clear">清除</button>' : '<button class="btn-ghost" data-act="cancel">取消</button>') +
     '<button class="btn-primary" data-act="ok">保存</button></div>',
@@ -69,8 +69,8 @@
      UI.toast('已清除出生日期');
     };
     el.querySelector('[data-act=ok]').onclick = function () {
-     var v = el.querySelector('#birthInput').value;
-     if (!v) { UI.toast('请选择出生日期'); return; }
+     var v = el.querySelector('#birthInput').value.trim();
+     if (!v) { UI.toast('请输入出生日期'); return; }
      if (!Store.setBirth(v)) { UI.toast('日期不合法'); return; }
      UI.closeSheet();
      App.go('home');
