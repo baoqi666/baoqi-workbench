@@ -29,10 +29,10 @@
     '<div class="row" style="gap:16px">' +
      UI.donut(w.pct, { size: 96, stroke: 11, text: w.pct + '%', fontSize: 19, c1: '#69db7c', c2: '#b2f2bb' }) +
      '<div class="grow">' +
-      '<div class="row" style="justify-content:space-between;font-size:13px;margin-bottom:6px"><span class="muted">本周完成</span><b>' + w.count + ' / ' + w.target + ' 次</b></div>' +
-      '<div class="row" style="justify-content:space-between;font-size:13px;margin-bottom:6px"><span class="muted">本周时长</span><b style="color:#2c9a70">' + UI.fmtMin(w.minutes) + '</b></div>' +
-      '<div class="row" style="justify-content:space-between;font-size:13px;margin-bottom:6px"><span class="muted">本月累计</span><b>' + m.count + ' 次 · ' + UI.fmtMin(m.minutes) + '</b></div>' +
-      '<div class="row" style="justify-content:space-between;font-size:13px"><span class="muted">今日已打卡</span><b>' + today + ' 项</b></div>' +
+      '<div class="row" style="justify-content:space-between;font-size:var(--fs-3);margin-bottom:6px"><span class="muted">本周完成</span><b>' + w.count + ' / ' + w.target + ' 次</b></div>' +
+      '<div class="row" style="justify-content:space-between;font-size:var(--fs-3);margin-bottom:6px"><span class="muted">本周时长</span><b style="color:#2c9a70">' + UI.fmtMin(w.minutes) + '</b></div>' +
+      '<div class="row" style="justify-content:space-between;font-size:var(--fs-3);margin-bottom:6px"><span class="muted">本月累计</span><b>' + m.count + ' 次 · ' + UI.fmtMin(m.minutes) + '</b></div>' +
+      '<div class="row" style="justify-content:space-between;font-size:var(--fs-3)"><span class="muted">今日已打卡</span><b>' + today + ' 项</b></div>' +
      '</div>' +
     '</div>' +
    '</div>';
@@ -45,9 +45,9 @@
    '<div class="fit-item" data-pid="' + p.id + '">' +
     '<div class="ic">' + Icons.cat(p.icon || 'fitness', { radius: 12 }) + '</div>' +
     '<div class="grow">' +
-     '<div class="row"><b style="font-size:14px">' + esc(p.name) + '</b>' +
-      '<span class="muted" style="font-size:11px;margin-left:6px">' + esc(p.desc || '') + '</span></div>' +
-     '<div class="muted" style="font-size:11px;margin-top:2px">每周 ' + p.perWeek + ' 次 · 每次 ' + p.minutes + ' 分钟</div>' +
+     '<div class="row"><b style="font-size:var(--fs-3)">' + esc(p.name) + '</b>' +
+      '<span class="muted" style="font-size:var(--fs-4);margin-left:6px">' + esc(p.desc || '') + '</span></div>' +
+     '<div class="muted" style="font-size:var(--fs-4);margin-top:2px">每周 ' + p.perWeek + ' 次 · 每次 ' + p.minutes + ' 分钟</div>' +
      '<div class="fit-prog"><i style="width:' + pct + '%"></i></div>' +
     '</div>' +
     '<div style="text-align:right">' +
@@ -62,10 +62,10 @@
 
  function todayList() {
   var logs = Store.fitLogs();
-  if (!logs.length) return '<div class="muted" style="font-size:12.5px;padding:4px 4px 8px">今天还没有训练记录，点右侧 ✓ 一键打卡</div>';
+  if (!logs.length) return '<div class="muted" style="font-size:var(--fs-4);padding:4px 4px 8px">今天还没有训练记录，点右侧 ✓ 一键打卡</div>';
   return logs.map(function (l) {
-   return '<div class="meal-item"><div class="grow"><b style="font-size:13.5px">' + esc(l.name) + '</b>' +
-    '<div class="muted" style="font-size:11px">' + l.minutes + ' 分钟</div></div>' +
+   return '<div class="meal-item"><div class="grow"><b style="font-size:var(--fs-3)">' + esc(l.name) + '</b>' +
+    '<div class="muted" style="font-size:var(--fs-4)">' + l.minutes + ' 分钟</div></div>' +
     '<button class="mini-act" data-rm="' + l.id + '"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>';
   }).join('');
  }
@@ -87,9 +87,9 @@
  function unfinished() {
   var list = Store.state.fitness.presets.filter(function (p) { return Store.fitWeekCount(p.id) < p.perWeek; });
   if (!list.length) return '<div class="card tight">' +
-   '<b style="font-size:13.5px">本周计划已全部完成，太强了</b></div>';
+   '<b style="font-size:var(--fs-3)">本周计划已全部完成，太强了</b></div>';
   return '<div class="card tight">' +
-   '<b style="font-size:13.5px">本周待完成提醒</b>' +
+   '<b style="font-size:var(--fs-3)">本周待完成提醒</b>' +
    '<div class="chips" style="margin-top:9px">' + list.map(function (p) {
     return '<span class="chip">' + esc(p.name) + ' 还差 ' + (p.perWeek - Store.fitWeekCount(p.id)) + ' 次</span>';
    }).join('') + '</div></div>';
@@ -157,7 +157,7 @@
    '<div class="field"><label>内容说明</label><input type="text" id="nDesc" placeholder="例如：慢跑 3 公里" maxlength="40"/></div>' +
    '<div class="field"><label>图标</label><div class="row" style="flex-wrap:wrap;gap:8px" id="iconPick">' +
     icons.map(function (i) {
-     return '<button data-icon="' + i + '" style="width:38px;height:38px;border-radius:12px;overflow:hidden;opacity:' + (i === 'fitness' ? 1 : .55) + '">' + Icons.cat(i, { radius: 12, badge: false }) + '</button>';
+     return '<button data-icon="' + i + '" style="width:38px;height:38px;border-radius:var(--r-m);overflow:hidden;opacity:' + (i === 'fitness' ? 1 : .55) + '">' + Icons.cat(i, { radius: 12, badge: false }) + '</button>';
     }).join('') + '</div></div>' +
    '<div class="field"><label>每周目标次数</label><input type="number" id="nWeek" min="1" max="14" value="2"/></div>' +
    '<div class="field"><label>单次时长（分钟）</label><input type="number" id="nMin" min="5" max="180" step="5" value="30"/></div>' +
@@ -219,8 +219,8 @@
   return '<div class="card"><div class="sec-title"><h2><span class="bar-mark"></span>历史记录</h2></div>' +
    dates.map(function (d) {
     var mm = logs[d].reduce(function (a, l) { return a + l.minutes; }, 0);
-    return '<div class="meal-item"><div class="grow"><b style="font-size:13.5px">' + d.slice(5) + ' ' + Store.weekName(d) + '</b>' +
-     '<div class="muted" style="font-size:11px">' + logs[d].map(function (l) { return esc(l.name); }).join(' · ') + '</div></div>' +
+    return '<div class="meal-item"><div class="grow"><b style="font-size:var(--fs-3)">' + d.slice(5) + ' ' + Store.weekName(d) + '</b>' +
+     '<div class="muted" style="font-size:var(--fs-4)">' + logs[d].map(function (l) { return esc(l.name); }).join(' · ') + '</div></div>' +
      '<b style="color:#2c9a70">' + mm + ' 分</b></div>';
    }).join('') + '</div>';
  }
