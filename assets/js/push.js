@@ -7,7 +7,7 @@
    ============================================================ */
 (function (global) {
  var KEY = 'catdesk.push.markers';
- var ID = { week: 2001, sentence: 2002, health: 2003 };
+ var ID = { week: 2001, sentence: 2002, health: 2003, beauty: 2004 };
 
  function markers() {
   try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { return {}; }
