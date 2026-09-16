@@ -99,7 +99,7 @@
   var head = '<div class="card reward-head">' +
    '<div class="rr-ic">' + Icons.cat('reward') + '</div>' +
    '<div class="grow"><b class="rr-name">奖励兑换</b>' +
-    '<div class="muted" style="font-size:12px">专注赚积分，用积分兑换你想要的奖励</div></div>' +
+    '<div class="muted" style="font-size:var(--fs-4)">专注赚积分，用积分兑换你想要的奖励</div></div>' +
    '<div class="rr-points"><b>' + ap + '</b><span>可用分</span></div>' +
   '</div>';
 
@@ -123,7 +123,7 @@
       '</div>';
      }).join('')
    : '<div class="sec-title"><h2><span class="bar-mark"></span>今日推荐</h2></div>' +
-     '<div class="card muted" style="font-size:13px;padding:14px">今天的推荐都处理完啦，明天会有新的小确幸等你挑～</div>';
+     '<div class="card muted" style="font-size:var(--fs-3);padding:14px">今天的推荐都处理完啦，明天会有新的小确幸等你挑～</div>';
 
   var hist = log.length
    ? '<div class="sec-title"><h2><span class="bar-mark"></span>兑换记录</h2></div>' +
