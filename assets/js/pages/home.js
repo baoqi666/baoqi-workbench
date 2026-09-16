@@ -147,26 +147,15 @@
    '</div>';
  }
 
- function pushRow(tag, title, desc) {
-  return '<div class="push-row">' +
-   '<span class="push-tag">' + esc(tag) + '</span>' +
-   '<div class="grow"><div class="push-title">' + esc(title) + '</div>' +
-   (desc ? '<div class="push-desc">' + esc(desc) + '</div>' : '') + '</div></div>';
- }
-
  function pushCard() {
-  var c = Push.current();
   var st = Push.status();
   var on = (st === 'native' || st === 'granted');
-  var label = on ? '已开启提醒' : '开启提醒';
+  var label = on ? '已开启提醒' : '开启每日提醒';
   return '' +
    '<div class="card push-card" id="pushCard">' +
-    '<div class="sec-title"><h2><span class="bar-mark"></span>今日推送</h2>' +
+    '<div class="sec-title"><h2><span class="bar-mark"></span>每日提醒</h2>' +
      '<button class="pill-btn' + (on ? ' plain' : '') + '" id="pushToggle">' + label + '</button></div>' +
-    '<div class="push-grid">' +
-     pushRow('出门', c.week ? c.week.name : '—', c.week ? c.week.tip : '本周推荐一个长沙去处') +
-     pushRow('健康', '小知识', c.health || '照顾好身体') +
-    '</div>' +
+    '<div class="muted" style="font-size:12.5px;line-height:1.65">开启后：每周一推送长沙去处、每日推送深度思考与美商修炼、晚间推送健康提醒。提醒内容也会在对应模块展示。</div>' +
    '</div>';
  }
 
