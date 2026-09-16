@@ -68,7 +68,7 @@
   function render(w) {
    if (!w) { el.textContent = '联网后显示开福区天气'; return; }
    el.innerHTML = w.temp + '° · ' + w.text +
-    '<span style="font-size:12px;color:var(--ink-3);font-weight:600;margin-left:6px">最高 ' + w.max + '° 最低 ' + w.min + '°</span>';
+    '<span style="font-size:var(--fs-4);color:var(--ink-3);font-weight:600;margin-left:6px">最高 ' + w.max + '° 最低 ' + w.min + '°</span>';
   }
   try {
    var cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
@@ -93,8 +93,20 @@
   }).catch(function () { render(null); });
  }
 
+ /* 每日随机称呼：按日期取，同一天保持稳定 */
+ var NAMES = ['宝子', '小可爱', '朋友', '小伙伴', '元气星人', '追光的人', '生活家',
+  '认真的人', '小太阳', '早睡选手', '努力家', '慢半拍', '行动派', '小确幸', '今天的你'];
+ function paintHi() {
+  var el = $('#splashHi');
+  if (!el) return;
+  var s = Store.today(), n = 0, i;
+  for (i = 0; i < s.length; i++) n = (n * 31 + s.charCodeAt(i)) % 100000;
+  el.textContent = '嗨，' + NAMES[n % NAMES.length];
+ }
+
  function initSplash() {
   $('#splashCat').innerHTML = Icons.splash();
+  paintHi();
   paintSplashTime();
   paintQuote(false);
   paintSplashPlace();
@@ -171,6 +183,75 @@
    ? 'iOS：点开 Safari 底部「分享」按钮 → 选「添加到主屏幕」→ 命名为「喵の工作台」。'
    : '安卓 / 桌面：点浏览器右上角菜单 →「安装应用 / 添加到主屏幕」即可。若没看到该选项，说明当前浏览器不支持，换个 Chrome 试试。';
   UI.confirm('安装到手机主屏', txt, function () {}, '我知道了');
+ }
+
+ /* ---------------- 全局底图：相册选择 + 智能取色 ---------------- */
+ var THEME_KEYS = ['--bg', '--card', '--card-2', '--line', '--line-2', '--ink', '--ink-2', '--ink-3',
+  '--brand', '--brand-ink', '--brand-soft', '--on-brand', '--shadow',
+  '--wall-scrim', '--wall-blur', '--wall-sat', '--wall-bri', '--splash-veil'];
+
+ function setWallImage(src) {
+  var w = $('#wallpaper'), s = $('#wallScrim');
+  if (!w) return;
+  if (src) {
+   w.style.backgroundImage = 'url("' + src + '")';
+   w.classList.add('on');
+   if (s) s.classList.add('on');
+  } else {
+   w.style.backgroundImage = '';
+   w.classList.remove('on');
+   if (s) s.classList.remove('on');
+  }
+ }
+
+ /** 启动恢复上次保存的底图与配色 */
+ function initTheme() {
+  if (!global.Theme || !Store.getWallpaper) return;
+  var wp = Store.getWallpaper();
+  if (!wp || !wp.src) return;
+  if (wp.palette) { Theme.applyVars(wp.palette); setWallImage(wp.src); return; }
+  Theme.setWallpaper(wp.src, function (vars) {
+   if (vars) Store.setWallpaper(wp.src, vars);
+  });
+ }
+
+ function setupWallpaper() {
+  var btn = $('#wallpaperBtn'), file = $('#wallpaperFile');
+  if (!btn || !file || !global.Theme) return;
+  btn.onclick = function () { closeDrawer(); file.value = ''; file.click(); };
+  file.onchange = function () {
+   var f = file.files && file.files[0];
+   if (!f) return;
+   var fr = new FileReader();
+   fr.onload = function () {
+    Theme.compress(String(fr.result), 1280, 0.82, function (small) {
+     Theme.preview(small, function () {           // 先即时套上，看全局效果
+      UI.sheet(
+       '<h3>底图预览</h3>' +
+       '<p class="muted" style="text-align:center;margin:0 0 14px;font-size:var(--fs-4)">界面配色已按这张图自动调整，确认后生效</p>' +
+       '<div class="wall-preview" style="background-image:url(&quot;' + small + '&quot;)"></div>' +
+       '<div class="sheet-actions">' +
+        '<button class="btn-ghost" data-act="cancel">取消</button>' +
+        '<button class="btn-primary" data-act="ok">使用这张底图</button>' +
+       '</div>',
+       function (el) {
+        el.querySelector('[data-act=cancel]').onclick = function () {
+         Theme.restore();                        // 回滚到上一张 / 默认主题
+         UI.closeSheet();
+        };
+        el.querySelector('[data-act=ok]').onclick = function () {
+         var root = document.documentElement, saved = {}, i;
+         for (i = 0; i < THEME_KEYS.length; i++) saved[THEME_KEYS[i]] = root.style.getPropertyValue(THEME_KEYS[i]);
+         Store.setWallpaper(small, saved);
+         UI.closeSheet();
+         UI.toast('底图已应用 · 配色已自动跟随');
+        };
+       });
+     });
+    });
+   };
+   fr.readAsDataURL(f);
+  };
  }
 
  /* ---------------- 抽屉 ---------------- */
@@ -470,9 +551,9 @@
   var td = Store.today();
   if (key === 'plan') {
    var e = Store.energyOf(td);
-   box.innerHTML = '<span class="tag blue" style="padding:6px 10px;font-size:11.5px">精力 ' + e.left + '</span>';
+   box.innerHTML = '<span class="tag blue" style="padding:6px 10px;font-size:var(--fs-4)">精力 ' + e.left + '</span>';
   } else if (key === 'home') {
-   box.innerHTML = '<span class="tag pink" style="padding:6px 10px;font-size:11.5px">连续 ' + Store.state.streak.count + ' 天</span>';
+   box.innerHTML = '<span class="tag pink" style="padding:6px 10px;font-size:var(--fs-4)">连续 ' + Store.state.streak.count + ' 天</span>';
   } else {
    box.innerHTML = '';
   }
@@ -504,9 +585,11 @@
  /* ---------------- 启动 ---------------- */
  function boot() {
   Store.seed();
+  initTheme();
   initSplash();
   buildDrawer();
   setupPWA();
+  setupWallpaper();
   Timer.init();
   Timer.onChange(function (t) { syncMini(t); });
   $('#miniTimer').onclick = function () { go('plan'); };
