@@ -87,13 +87,45 @@
    '</div></div>';
  }
 
- /* ---------------- 复盘编辑（支持 日/周/月） ---------------- */
+ /* ---------------- 复盘编辑（支持 日/周/月，可附图片） ---------------- */
+ /* 选图压缩：限制最长边 1000px，输出 JPEG dataURL，控制本地存储体积 */
+ function resizeImage(file, cb) {
+  var reader = new FileReader();
+  reader.onload = function (ev) {
+   var img = new Image();
+   img.onload = function () {
+    var max = 1000, w = img.width, h = img.height;
+    if (w > max || h > max) {
+     if (w >= h) { h = Math.round(h * max / w); w = max; }
+     else { w = Math.round(w * max / h); h = max; }
+    }
+    try {
+     var cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+     cv.getContext('2d').drawImage(img, 0, 0, w, h);
+     cb(cv.toDataURL('image/jpeg', 0.82));
+    } catch (e) { cb(null); }
+   };
+   img.onerror = function () { cb(null); };
+   img.src = ev.target.result;
+  };
+  reader.onerror = function () { cb(null); };
+  reader.readAsDataURL(file);
+ }
+ /* 复盘图片渲染：列表里最多 3 张缩略图，详情里全部展示 */
+ function imagesHtml(r, mini) {
+  if (!r.images || !r.images.length) return '';
+  var arr = mini ? r.images.slice(0, 3) : r.images;
+  return '<div class="rv-imgs' + (mini ? ' mini' : '') + '">' +
+   arr.map(function (s) { return '<img src="' + s + '" alt=""/>'; }).join('') + '</div>';
+ }
+
  function openReviewSheet(date, type, rv) {
   var fields = fieldsFor(type);
   var isEdit = !!rv;
   var v = rv || {};
   var week = type === 'week' ? Store.weekKey(date) : '';
   var range = type === 'week' ? weekRange(date) : '';
+  var picked = (v.images && v.images.slice()) || [];
   UI.sheet(
    '<h3>' + (isEdit ? '编辑' : '新建') + (TYPE_NAME[type] || '复盘') + '</h3>' +
    (type === 'week'
@@ -103,6 +135,10 @@
     return '<div class="field"><label>' + f.n + '</label>' +
      '<textarea data-f="' + f.k + '" placeholder="' + f.p + '">' + esc(v[f.k] || '') + '</textarea></div>';
    }).join('') +
+   '<div class="field"><label>图片（可选）</label>' +
+    '<button type="button" class="pill-btn plain" id="revAddImg" style="width:100%;justify-content:center;margin-bottom:8px">＋ 添加图片</button>' +
+    '<input type="file" id="revImgInput" accept="image/*" multiple hidden />' +
+    '<div class="img-previews" id="revImgs"></div></div>' +
    '<div class="sheet-actions">' +
    (isEdit ? '<button class="btn-danger" data-act="del">删除</button>' : '<button class="btn-ghost" data-act="cancel">取消</button>') +
    '<button class="btn-primary" data-act="ok">保存归档</button></div>',
@@ -117,6 +153,26 @@
       }, '删除');
      }, 260);
     };
+    var imgInput = el.querySelector('#revImgInput');
+    var imgBox = el.querySelector('#revImgs');
+    function paintImgs() {
+     imgBox.innerHTML = picked.map(function (src, i) {
+      return '<div class="img-thumb" data-i="' + i + '"><img src="' + src + '" alt=""/><button type="button" class="img-del" data-del="' + i + '">×</button></div>';
+     }).join('');
+     UI.$$('.img-del', imgBox).forEach(function (b) {
+      b.onclick = function (e) { e.stopPropagation(); var i = +b.dataset.del; picked.splice(i, 1); paintImgs(); };
+     });
+    }
+    el.querySelector('#revAddImg').onclick = function () { imgInput.click(); };
+    imgInput.onchange = function (e) {
+     var files = e.target.files || [];
+     Array.prototype.forEach.call(files, function (file) {
+      if (!file.type || file.type.indexOf('image/') !== 0) return;
+      resizeImage(file, function (dataUrl) { if (dataUrl) { picked.push(dataUrl); paintImgs(); } });
+     });
+     imgInput.value = '';
+    };
+    paintImgs();
     el.querySelector('[data-act=ok]').onclick = function () {
      var data = { id: v.id, type: type, date: date, week: week, range: type === 'week' ? (el.querySelector('#rRange').value.trim() || range) : '' };
      var hasContent = false;
@@ -124,7 +180,8 @@
       data[t.dataset.f] = t.value.trim();
       if (t.value.trim()) hasContent = true;
      });
-     if (!hasContent) { UI.toast('至少填写一个维度吧 '); return; }
+     data.images = picked.slice();
+     if (!hasContent && !data.images.length) { UI.toast('至少填写一个维度或添加一张图片吧 '); return; }
      Store.saveReview(data);
      UI.closeSheet(); refresh(); UI.toast('复盘已归档 ');
     };
@@ -180,10 +237,14 @@
 
  /* ---------------- 日详情视图 ---------------- */
  function todoItem(t) {
+  var remindTxt = '';
+  if (t.remind != null && t.remind >= 0) {
+   remindTxt = ' <span class="todo-remind">' + (t.remind === 0 ? '准时提醒' : '提前' + t.remind + '分提醒') + '</span>';
+  }
   return '<div class="todo-item' + (t.done ? ' done' : '') + '" data-id="' + t.id + '">' +
    '<button class="tick' + (t.done ? ' on' : '') + '" data-act="ttoggle">' +
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5 9.5 18 20 6.5"/></svg></button>' +
-   '<div class="grow"><div class="todo-time">' + (t.time || '—') + '</div><div class="t-name">' + esc(t.title) + '</div></div>' +
+   '<div class="grow"><div class="todo-time">' + (t.time || '—') + remindTxt + '</div><div class="t-name">' + esc(t.title) + '</div></div>' +
    '<button class="mini-act" data-act="tdel" title="删除">' +
     '<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 7h14M9 7V5h6v2M7 7l1 13h8l1-13"/></svg></button>' +
    '</div>';
@@ -218,7 +279,7 @@
    '<div class="card">' +
     '<div class="sec-title"><h2><span class="bar-mark"></span>当日待办</h2><span class="more">' + todos.length + ' 项</span></div>' +
     (todos.length ? todos.map(todoItem).join('') : '<div class="muted" style="padding:4px 2px 8px">还没有待办</div>') +
-    '<button class="pill-btn plain" id="addTodo" style="width:100%;justify-content:center;margin-top:8px">＋ 添加待办（可设时间）</button>' +
+    '<button class="pill-btn plain" id="addTodo" style="width:100%;justify-content:center;margin-top:8px">＋ 添加待办（可设时间 / 提醒）</button>' +
    '</div>' +
    '<div class="card">' +
     '<div class="sec-title"><h2><span class="bar-mark"></span>当日复盘</h2></div>' +
@@ -241,6 +302,7 @@
   return '<div class="review-item" data-id="' + r.id + '">' +
    '<h4><span>' + esc(r.range || r.date || '') + '</span><span class="tag blue">' + tm + '</span></h4>' +
    (preview ? '<p>' + esc(preview) + '</p>' : '') +
+   imagesHtml(r) +
    '<div class="muted" style="font-size:11px;margin-top:8px">' +
     new Date(r.updatedAt || r.createdAt).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) + ' 更新</div>' +
    '</div>';
@@ -275,25 +337,52 @@
    '</div><div style="height:16px"></div></div>';
  }
 
- /* ---------------- 待办弹层 ---------------- */
- function todoSheet(date) {
+ /* ---------------- 待办弹层（时间 + 提醒，支持编辑） ---------------- */
+ function todoSheet(date, t) {
+  var isEdit = !!t;
+  var title = t ? (t.title || '') : '';
+  var time = t ? (t.time || '') : '';
+  var remind = t ? (t.remind != null ? t.remind : -1) : -1;
+  function opt(v, label) { return '<option value="' + v + '"' + (remind == v ? ' selected' : '') + '>' + label + '</option>'; }
   UI.sheet(
-   '<h3>添加待办</h3>' +
+   '<h3>' + (isEdit ? '编辑待办' : '添加待办') + '</h3>' +
    '<div class="field"><label>事项</label>' +
-    '<input type="text" id="tTitle" placeholder="例如：16:00 给妈妈打电话" maxlength="40"/></div>' +
+    '<input type="text" id="tTitle" value="' + esc(title) + '" placeholder="例如：16:00 给妈妈打电话" maxlength="40"/></div>' +
    '<div class="field"><label>具体时间（小时 : 分钟）</label>' +
-    '<input type="time" id="tTime"/></div>' +
+    '<input type="time" id="tTime" value="' + esc(time) + '"/></div>' +
+   '<div class="field"><label>提醒</label>' +
+    '<select id="tRemind">' +
+     opt(-1, '不提醒') + opt(0, '准时提醒') + opt(5, '提前 5 分钟') +
+     opt(15, '提前 15 分钟') + opt(30, '提前 30 分钟') + opt(60, '提前 1 小时') +
+    '</select></div>' +
    '<div class="sheet-actions">' +
-    '<button class="btn-ghost" data-act="cancel">取消</button>' +
-    '<button class="btn-primary" data-act="ok">添加</button></div>',
+   (isEdit ? '<button class="btn-danger" data-act="del">删除</button>' : '<button class="btn-ghost" data-act="cancel">取消</button>') +
+   '<button class="btn-primary" data-act="ok">' + (isEdit ? '保存' : '添加') + '</button></div>',
    function (el) {
     var c = el.querySelector('[data-act=cancel]'); if (c) c.onclick = UI.closeSheet;
+    var dl = el.querySelector('[data-act=del]');
+    if (dl) dl.onclick = function () {
+     UI.closeSheet();
+     setTimeout(function () {
+      UI.confirm('删除这条待办？', title || '', function () {
+       Store.removeTodo(date, t.id);
+       if (global.Push && Push.cancelTodoReminder) Push.cancelTodoReminder(date, t.id);
+       refresh(); UI.toast('已删除');
+      }, '删除');
+     }, 260);
+    };
     el.querySelector('[data-act=ok]').onclick = function () {
-     var title = el.querySelector('#tTitle').value.trim();
-     if (!title) { UI.toast('写点什么吧 '); return; }
-     var time = el.querySelector('#tTime').value || '';
-     Store.addTodo(date, { title: title, time: time });
-     UI.closeSheet(); refresh(); UI.toast('已添加待办' + (time ? ' · ' + time : ''));
+     var ttl = el.querySelector('#tTitle').value.trim();
+     if (!ttl) { UI.toast('写点什么吧 '); return; }
+     var tm = el.querySelector('#tTime').value || '';
+     var rm = parseInt(el.querySelector('#tRemind').value, 10);
+     if (isEdit) {
+      Store.updateTodo(date, t.id, { title: ttl, time: tm, remind: rm });
+     } else {
+      Store.addTodo(date, { title: ttl, time: tm, remind: rm });
+     }
+     if (global.Push && Push.scheduleTodoReminders) Push.scheduleTodoReminders();
+     UI.closeSheet(); refresh(); UI.toast(isEdit ? '已保存' : ('已添加待办' + (tm ? ' · ' + tm : '')));
     };
    }
   );
