@@ -209,7 +209,7 @@
     '<div class="ic">' + Icons.cat('express', { radius: 12 }) + '</div>' +
     '<div class="num">' + UI.fmtMinShort(s.min) + '</div>' +
     '<div class="lb">口语输出时长</div>' +
-    '<div class="sub">自信表达 <b style="color:#5a7d70">' + s.count + '</b> 次</div>' +
+    '<div class="sub">玉琢 <b style="color:#5a7d70">' + s.count + '</b> 次</div>' +
    '</div>';
  }
 
