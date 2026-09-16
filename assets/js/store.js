@@ -378,15 +378,22 @@
 
  /* ---------- 人生 RPG（游戏化打卡） ---------- */
  var LIFESPAN_DAYS = 80 * 365.25; // 预期寿命 ≈ 29220 天
- /** 设置出生日期（YYYY-MM-DD），校验合法后落库；传空串则清除 */
+ /** 设置出生日期：支持直接文字输入（1998-05-20 / 1998/5/20 / 19980520 等），校验合法后落库；空串则清除 */
  function setBirth(date) {
   if (!date) { state.birth = ''; save(); return true; }
-  var d = parse(date);
-  if (isNaN(d.getTime())) return false;
-  var span = diffDays(today(), date);
+  var s = String(date).trim().replace(/[.\/\s]+/g, '-').replace(/-+/g, '-');
+  if (/^\d{8}$/.test(s.replace(/-/g, ''))) s = s.replace(/(\d{4})(\d{2})(\d{2})/, '$1-$2-$3');
+  var p = s.split('-');
+  if (p.length !== 3) return false;
+  var y = +p[0], m = +p[1], d = +p[2];
+  if (!(y >= 1900 && y <= parse(today()).getFullYear())) return false;
+  var dt = new Date(y, m - 1, d);
+  if (dt.getFullYear() !== y || dt.getMonth() !== m - 1 || dt.getDate() !== d) return false; // 剔除 2 月 30 日之类
+  var iso = y + '-' + (m < 10 ? '0' + m : m) + '-' + (d < 10 ? '0' + d : d);
+  var span = diffDays(today(), iso);
   if (span < 0) return false;          // 未来日期非法
   if (span > 365 * 130) return false;  // 合理上限 130 岁
-  state.birth = date;
+  state.birth = iso;
   save();
   return true;
  }
