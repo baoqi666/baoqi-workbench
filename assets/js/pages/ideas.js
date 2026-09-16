@@ -70,7 +70,7 @@
      '<div class="i-name">' + esc(i.title) + '</div>' +
      '<div class="t-meta">' +
       '<span class="tag ' + (TAG_STYLE[i.tag] || 'gray') + '">' + esc(i.tag) + '</span>' +
-      (i.note ? '<span class="muted" style="font-size:11.5px">' + esc(i.note.slice(0, 22)) + (i.note.length > 22 ? '…' : '') + '</span>' : '') +
+      (i.note ? '<span class="muted" style="font-size:var(--fs-4)">' + esc(i.note.slice(0, 22)) + (i.note.length > 22 ? '…' : '') + '</span>' : '') +
       (inPlan ? '<span class="tag green">已在今日计划</span>' : '') +
      '</div>' +
      (i.feel ? '<div class="i-feel">「' + esc(i.feel) + '」</div>' : '') +
@@ -85,7 +85,7 @@
   var val = idea.feel || '';
   UI.sheet(
    '<h3>记录此刻的感受</h3>' +
-   '<div class="muted" style="text-align:center;font-size:12px;margin-bottom:12px">「' + esc(idea.title) + '」已完成</div>' +
+   '<div class="muted" style="text-align:center;font-size:var(--fs-4);margin-bottom:12px">「' + esc(idea.title) + '」已完成</div>' +
    '<div class="field"><label>一句话记录当下的心情（可选）</label>' +
     '<textarea id="fFeel" placeholder="例如：原来我真的可以做到，很踏实。">' + esc(val) + '</textarea></div>' +
    '<div class="sheet-actions">' +
@@ -113,9 +113,9 @@
   return '<div class="fade-in">' +
    '<div class="card tight">' +
     '<div class="row" style="gap:12px">' +
-     '<div style="width:44px;height:44px;border-radius:14px;overflow:hidden;flex:none">' + Icons.cat('idea') + '</div>' +
-     '<div class="grow"><b style="font-size:14.5px">未来想做的事</b>' +
-      '<div class="muted" style="font-size:11.5px">共 ' + all.length + ' 条 · 已实现 ' + all.filter(function (i) { return i.done; }).length + ' 条</div></div>' +
+     '<div style="width:44px;height:44px;border-radius:var(--r-m);overflow:hidden;flex:none">' + Icons.cat('idea') + '</div>' +
+     '<div class="grow"><b style="font-size:var(--fs-3)">未来想做的事</b>' +
+      '<div class="muted" style="font-size:var(--fs-4)">共 ' + all.length + ' 条 · 已实现 ' + all.filter(function (i) { return i.done; }).length + ' 条</div></div>' +
     '</div>' +
    '</div>' +
    '<div class="chips" style="margin:2px 2px 14px">' +
