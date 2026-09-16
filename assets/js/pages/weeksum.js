@@ -51,7 +51,7 @@
   return '<div class="review-item" data-id="' + s.id + '">' +
    '<h4><span>' + esc(s.range) + '</span><span class="tag blue">周总结</span></h4>' +
    '<p>' + esc(s.tagline) + '</p>' + chip +
-   '<div class="muted" style="font-size:11px;margin-top:8px">' + humanWeek(s.week) + ' · ' +
+   '<div class="muted" style="font-size:var(--fs-4);margin-top:8px">' + humanWeek(s.week) + ' · ' +
     new Date(s.generatedAt).toLocaleDateString('zh-CN') + ' 生成</div>' +
   '</div>';
  }
@@ -118,11 +118,11 @@
    '<div class="card">' +
     '<div class="row" style="margin-bottom:6px">' +
      '<button class="mini-act" id="backList"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg></button>' +
-     '<div class="grow" style="margin-left:8px"><b style="font-size:15px">' + esc(s.range) + '</b>' +
-      '<div class="muted" style="font-size:11px">' + humanWeek(s.week) + ' · ' + new Date(s.generatedAt).toLocaleDateString('zh-CN') + ' 生成</div></div>' +
+     '<div class="grow" style="margin-left:8px"><b style="font-size:var(--fs-2)">' + esc(s.range) + '</b>' +
+      '<div class="muted" style="font-size:var(--fs-4)">' + humanWeek(s.week) + ' · ' + new Date(s.generatedAt).toLocaleDateString('zh-CN') + ' 生成</div></div>' +
      '<button class="pill-btn plain" id="delSum">删除</button>' +
     '</div>' +
-    '<p style="font-size:13.5px;line-height:1.7;color:var(--ink);margin:6px 0 2px">' + esc(s.tagline) + '</p>' +
+    '<p style="font-size:var(--fs-3);line-height:1.7;color:var(--ink);margin:6px 0 2px">' + esc(s.tagline) + '</p>' +
    '</div>' +
    grid +
    '<div class="card tight"><div class="sec-title"><h2><span class="bar-mark"></span>每日专注分布</h2></div>' + chart + '</div>' +
