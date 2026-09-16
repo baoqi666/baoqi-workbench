@@ -38,8 +38,8 @@
   var sText = (c.sentence && c.sentence.text) || '今天也给自己一段安静的思考，去慢一点、深一点地活着。';
   var sentenceCard = '<div class="card daily-deep" id="dailySentence">' +
    '<div class="row" style="gap:10px;align-items:flex-start;margin-bottom:9px">' +
-    '<div class="grow"><b style="font-size:14.5px">今日深度思考 · 玉琢</b></div>' +
-    '<div style="flex:none;font-size:11px;color:#b9a07a;white-space:nowrap;margin-top:3px">每日更新</div>' +
+    '<div class="grow"><b style="font-size:var(--fs-3)">今日深度思考 · 玉琢</b></div>' +
+    '<div style="flex:none;font-size:var(--fs-4);color:#b9a07a;white-space:nowrap;margin-top:3px">每日更新</div>' +
    '</div>' +
    '<div class="deep-quote">' + esc(sText) + '</div>' +
    '</div>';
@@ -47,20 +47,20 @@
   var b = c.beauty || {};
   var beautyCard = '<div class="card daily-deep" id="beautyCard">' +
    '<div class="row" style="gap:10px;align-items:flex-start;margin-bottom:10px">' +
-    '<div class="grow"><b style="font-size:14.5px">美商修炼 · 今日</b></div>' +
-    '<div style="flex:none;font-size:11px;color:#b9a07a;white-space:nowrap;margin-top:3px">每日更新</div>' +
+    '<div class="grow"><b style="font-size:var(--fs-3)">美商修炼 · 今日</b></div>' +
+    '<div style="flex:none;font-size:var(--fs-4);color:#b9a07a;white-space:nowrap;margin-top:3px">每日更新</div>' +
    '</div>' +
    '<div style="margin-bottom:9px">' +
-    '<div style="font-size:11.5px;color:var(--ink-3);font-weight:700;margin-bottom:3px">方法</div>' +
-    '<div class="deep-quote" style="font-size:13.5px;line-height:1.72">' + esc(b.method || '今天做一件让眼睛舒服的小事。') + '</div>' +
+    '<div style="font-size:var(--fs-4);color:var(--ink-3);font-weight:700;margin-bottom:3px">方法</div>' +
+    '<div class="deep-quote" style="font-size:var(--fs-3);line-height:1.72">' + esc(b.method || '今天做一件让眼睛舒服的小事。') + '</div>' +
    '</div>' +
    '<div style="margin-bottom:9px">' +
-    '<div style="font-size:11.5px;color:var(--ink-3);font-weight:700;margin-bottom:3px">内容</div>' +
-    '<div class="deep-quote" style="font-size:13.5px;line-height:1.72">' + esc(b.content || '留意一件身边好看的东西。') + '</div>' +
+    '<div style="font-size:var(--fs-4);color:var(--ink-3);font-weight:700;margin-bottom:3px">内容</div>' +
+    '<div class="deep-quote" style="font-size:var(--fs-3);line-height:1.72">' + esc(b.content || '留意一件身边好看的东西。') + '</div>' +
    '</div>' +
    '<div>' +
-    '<div style="font-size:11.5px;color:var(--ink-3);font-weight:700;margin-bottom:3px">知识</div>' +
-    '<div class="deep-quote" style="font-size:13.5px;line-height:1.72">' + esc(b.knowledge || '审美是可以每天积累的眼睛训练。') + '</div>' +
+    '<div style="font-size:var(--fs-4);color:var(--ink-3);font-weight:700;margin-bottom:3px">知识</div>' +
+    '<div class="deep-quote" style="font-size:var(--fs-3);line-height:1.72">' + esc(b.knowledge || '审美是可以每天积累的眼睛训练。') + '</div>' +
    '</div>' +
    '</div>';
 
@@ -91,9 +91,9 @@
    beautyCard +
    '<div class="card expr-head">' +
     '<div class="row" style="gap:12px">' +
-     '<div style="width:46px;height:46px;border-radius:14px;overflow:hidden;flex:none">' + Icons.cat('express') + '</div>' +
-     '<div class="grow"><b style="font-size:16px">今日口语表达训练</b>' +
-      '<div class="muted" style="font-size:12px">五步曲 · 约 30 分钟 · 无需录音</div></div>' +
+     '<div style="width:46px;height:46px;border-radius:var(--r-m);overflow:hidden;flex:none">' + Icons.cat('express') + '</div>' +
+     '<div class="grow"><b style="font-size:var(--fs-2)">今日口语表达训练</b>' +
+      '<div class="muted" style="font-size:var(--fs-4)">五步曲 · 约 30 分钟 · 无需录音</div></div>' +
     '</div>' +
     '<div class="expr-prog"><b>' + doneN + '</b>/' + STEPS.length + '</div>' +
    '</div>' +
