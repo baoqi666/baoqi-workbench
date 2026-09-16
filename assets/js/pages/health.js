@@ -39,10 +39,10 @@
     '<div class="row" style="gap:16px">' +
      UI.donut(pct, { size: 92, stroke: 11, text: mins ? (mins / 60).toFixed(1) + 'h' : '--', fontSize: 17, c1: '#95a8ff', c2: '#bac8ff' }) +
      '<div class="grow">' +
-      '<div class="row" style="justify-content:space-between;font-size:13px;margin-bottom:6px"><span class="muted">入睡</span><b>' + (h.sleepAt || '--:--') + '</b></div>' +
-      '<div class="row" style="justify-content:space-between;font-size:13px;margin-bottom:6px"><span class="muted">起床</span><b>' + (h.wakeAt || '--:--') + '</b></div>' +
-      '<div class="row" style="justify-content:space-between;font-size:13px"><span class="muted">时长</span><b style="color:#5a7d70">' + (mins ? UI.fmtMin(mins) : '待记录') + '</b></div>' +
-      (lateTip ? '<div class="muted" style="font-size:11px;margin-top:6px">' + lateTip + '</div>' : '') +
+      '<div class="row" style="justify-content:space-between;font-size:var(--fs-3);margin-bottom:6px"><span class="muted">入睡</span><b>' + (h.sleepAt || '--:--') + '</b></div>' +
+      '<div class="row" style="justify-content:space-between;font-size:var(--fs-3);margin-bottom:6px"><span class="muted">起床</span><b>' + (h.wakeAt || '--:--') + '</b></div>' +
+      '<div class="row" style="justify-content:space-between;font-size:var(--fs-3)"><span class="muted">时长</span><b style="color:var(--brand-ink)">' + (mins ? UI.fmtMin(mins) : '待记录') + '</b></div>' +
+      (lateTip ? '<div class="muted" style="font-size:var(--fs-4);margin-top:6px">' + lateTip + '</div>' : '') +
      '</div>' +
     '</div>' +
     '<div class="sleep-row">' +
@@ -66,7 +66,7 @@
   var has = data.some(function (x) { return x.value > 0; });
   if (!has) return '';
   return '<div style="margin-top:12px">' + UI.barChart(data, { height: 96 }) +
-   '<div class="muted" style="text-align:center;font-size:11px">近 7 天睡眠时长（小时）</div></div>';
+   '<div class="muted" style="text-align:center;font-size:var(--fs-4)">近 7 天睡眠时长（小时）</div></div>';
  }
 
  /* ---------- 饮水 ---------- */
@@ -84,7 +84,7 @@
     '<div class="sec-title"><h2><span class="bar-mark"></span>饮水打卡</h2>' +
      '<span class="more">' + h.water + ' / ' + goal + ' 杯</span></div>' +
     '<div class="water-grid">' + cups + '</div>' +
-    '<div class="muted" style="font-size:11.5px;margin-top:10px">' +
+    '<div class="muted" style="font-size:var(--fs-4);margin-top:10px">' +
      (h.water >= goal ? '今日饮水已达标，身体很开心 ' : '还差 ' + (goal - h.water) + ' 杯，点一下水杯即可打卡') + '</div>' +
    '</div>';
  }
@@ -96,8 +96,8 @@
   var total = (h.meals || []).reduce(function (a, m) { return a + (+m.kcal || 0); }, 0);
   var pct = Math.min(100, Math.round(total / goal * 100));
   var list = (h.meals || []).map(function (m, i) {
-   return '<div class="meal-item"><div class="grow"><b style="font-size:13.5px">' + esc(m.name) + '</b>' +
-    '<div class="muted" style="font-size:11px">' + esc(m.time || '') + '</div></div>' +
+   return '<div class="meal-item"><div class="grow"><b style="font-size:var(--fs-3)">' + esc(m.name) + '</b>' +
+    '<div class="muted" style="font-size:var(--fs-4)">' + esc(m.time || '') + '</div></div>' +
     '<b style="color:#c9803a">' + m.kcal + ' kcal</b>' +
     '<button class="mini-act" data-del="' + i + '"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>';
   }).join('');
@@ -108,13 +108,13 @@
     '<div class="kcal-ring">' +
      UI.donut(pct, { size: 96, stroke: 11, text: total + '', fontSize: 19, c1: '#ffa94d', c2: '#ffd8a8' }) +
      '<div class="grow">' +
-      '<div style="font-size:13px" class="muted">今日摄入总卡路里</div>' +
-      '<div style="font-size:26px;font-weight:800;line-height:1.2">' + total + ' <small style="font-size:12px;color:#93a3bd">kcal</small></div>' +
-      '<div class="muted" style="font-size:11.5px">目标 ' + goal + ' kcal · ' +
+      '<div style="font-size:var(--fs-3)" class="muted">今日摄入总卡路里</div>' +
+      '<div style="font-size:var(--fs-display);font-weight:800;line-height:1.2">' + total + ' <small style="font-size:var(--fs-4);color:#93a3bd">kcal</small></div>' +
+      '<div class="muted" style="font-size:var(--fs-4)">目标 ' + goal + ' kcal · ' +
        (total > goal ? '超出 ' + (total - goal) : '剩余 ' + (goal - total)) + ' kcal</div>' +
      '</div>' +
     '</div>' +
-    (list ? '<div style="margin-top:14px">' + list + '</div>' : '<div class="muted" style="font-size:12.5px;margin-top:12px">还没有记录，点右上角添加</div>') +
+    (list ? '<div style="margin-top:14px">' + list + '</div>' : '<div class="muted" style="font-size:var(--fs-4);margin-top:12px">还没有记录，点右上角添加</div>') +
    '</div>';
  }
 
@@ -178,9 +178,9 @@
   var c = Push.current();
   var tipCard = '<div class="card" style="border-left:3px solid #8fd0a8">' +
    '<div class="row" style="gap:10px;align-items:flex-start">' +
-    '<div class="grow"><b style="font-size:14px">健康小知识</b>' +
-     '<div class="muted" style="font-size:13px;margin-top:5px;line-height:1.55">' + esc(c.health || '') + '</div></div>' +
-    '<div style="flex:none;font-size:11px;color:#7fae93;white-space:nowrap">每日更新</div>' +
+    '<div class="grow"><b style="font-size:var(--fs-3)">健康小知识</b>' +
+     '<div class="muted" style="font-size:var(--fs-3);margin-top:5px;line-height:1.55">' + esc(c.health || '') + '</div></div>' +
+    '<div style="flex:none;font-size:var(--fs-4);color:var(--brand);white-space:nowrap">每日更新</div>' +
    '</div></div>';
   return '<div class="fade-in">' + tipCard + sleepCard() + waterCard() + foodCard() +
    '<div style="height:12px"></div></div>';
