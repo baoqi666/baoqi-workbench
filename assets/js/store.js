@@ -49,6 +49,7 @@
   return {
    v: 1,
    createdAt: today(),
+   birth: '',
    profile: { name: '喵の工作台', energyMax: 100, waterGoal: 5, kcalGoal: 1800 },
    streak: { count: 0, last: '', dates: [] },
    rpg: { xp: 0 },
@@ -100,6 +101,7 @@
     if (!raw.summaries) raw.summaries = [];
     if (!raw.rpg || typeof raw.rpg !== 'object') raw.rpg = { xp: 0 };
     if (raw.rpg.xp == null) raw.rpg.xp = 0;
+    if (raw.birth == null) raw.birth = '';
     // 迁移：历史已完成的任务（未走过计时器、无 doneCredit）补记预计时长为积分来源
     Object.keys(raw.days || {}).forEach(function (dt) {
      (raw.days[dt].tasks || []).forEach(function (t) {
@@ -374,10 +376,22 @@
   return st.count;
 }
 
-/* ---------- 人生 RPG（游戏化打卡） ---------- */
-var LIFESPAN_DAYS = 80 * 365.25; // 预期寿命 ≈ 29220 天
-/** 登陆地球天数 = 自账号创建（首次打开）起算，含今天 */
-function daysOnEarth() { return diffDays(today(), state.createdAt) + 1; }
+ /* ---------- 人生 RPG（游戏化打卡） ---------- */
+ var LIFESPAN_DAYS = 80 * 365.25; // 预期寿命 ≈ 29220 天
+ /** 设置出生日期（YYYY-MM-DD），校验合法后落库；传空串则清除 */
+ function setBirth(date) {
+  if (!date) { state.birth = ''; save(); return true; }
+  var d = parse(date);
+  if (isNaN(d.getTime())) return false;
+  var span = diffDays(today(), date);
+  if (span < 0) return false;          // 未来日期非法
+  if (span > 365 * 130) return false;  // 合理上限 130 岁
+  state.birth = date;
+  save();
+  return true;
+ }
+ /** 登陆地球天数：有出生日期则按真实年龄，否则回退到账号创建日，均含今天 */
+ function daysOnEarth() { return diffDays(today(), state.birth || state.createdAt) + 1; }
 /** 人生进度百分比（相对预期寿命） */
 function lifeProgress() { return daysOnEarth() / LIFESPAN_DAYS * 100; }
 /** 总经验 = 打卡累积经验 + 专注时长折算（每 120 分钟 +1） */
@@ -904,7 +918,7 @@ function addBudgetSaved(amount) {
   addFocus: addFocus, addPomo: addPomo, addCharge: addCharge, addOutput: addOutput, rollover: rollover,
   checkin: checkin, trend: trend, lastDays: lastDays, totalFocus: totalFocus,
   daysOnEarth: daysOnEarth, lifeProgress: lifeProgress, lifeXP: lifeXP,
-  playerLevel: playerLevel, rpgAttrs: rpgAttrs,
+  playerLevel: playerLevel, rpgAttrs: rpgAttrs, setBirth: setBirth,
   addIdea: addIdea, toggleIdea: toggleIdea, setIdeaFeel: setIdeaFeel, removeIdea: removeIdea,
   fitLogs: fitLogs, addFitLog: addFitLog, removeFitLog: removeFitLog,
   fitWeekCount: fitWeekCount, fitMonthMinutes: fitMonthMinutes,
