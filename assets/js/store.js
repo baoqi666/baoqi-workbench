@@ -50,6 +50,7 @@
    v: 1,
    createdAt: today(),
    birth: '',
+   wallpaper: { src: '', palette: null },
    profile: { name: '喵の工作台', energyMax: 100, waterGoal: 5, kcalGoal: 1800 },
    streak: { count: 0, last: '', dates: [] },
    rpg: { xp: 0 },
@@ -102,6 +103,7 @@
     if (!raw.rpg || typeof raw.rpg !== 'object') raw.rpg = { xp: 0 };
     if (raw.rpg.xp == null) raw.rpg.xp = 0;
     if (raw.birth == null) raw.birth = '';
+    if (!raw.wallpaper) raw.wallpaper = { src: '', palette: null };
     // 迁移：历史已完成的任务（未走过计时器、无 doneCredit）补记预计时长为积分来源
     Object.keys(raw.days || {}).forEach(function (dt) {
      (raw.days[dt].tasks || []).forEach(function (t) {
@@ -379,6 +381,14 @@
  /* ---------- 人生 RPG（游戏化打卡） ---------- */
  var LIFESPAN_DAYS = 80 * 365.25; // 预期寿命 ≈ 29220 天
  /** 设置出生日期：支持直接文字输入（1998-05-20 / 1998/5/20 / 19980520 等），校验合法后落库；空串则清除 */
+ /** 全局底图：src 为空表示未设置（使用默认主题） */
+ function getWallpaper() { return (state && state.wallpaper) ? state.wallpaper : { src: '', palette: null }; }
+ function setWallpaper(src, palette) {
+  if (!state.wallpaper) state.wallpaper = { src: '', palette: null };
+  state.wallpaper.src = src || '';
+  state.wallpaper.palette = palette || null;
+  save();
+ }
  function setBirth(date) {
   if (!date) { state.birth = ''; save(); return true; }
   var s = String(date).trim().replace(/[.\/\s]+/g, '-').replace(/-+/g, '-');
@@ -941,6 +951,7 @@ function addBudgetSaved(amount) {
   addIdea: addIdea, toggleIdea: toggleIdea, setIdeaFeel: setIdeaFeel, removeIdea: removeIdea,
   fitLogs: fitLogs, addFitLog: addFitLog, removeFitLog: removeFitLog,
   fitWeekCount: fitWeekCount, fitMonthMinutes: fitMonthMinutes,
+  getWallpaper: getWallpaper, setWallpaper: setWallpaper,
   addTodo: addTodo, updateTodo: updateTodo, toggleTodo: toggleTodo, removeTodo: removeTodo, sortedTodos: sortedTodos,
   addFund: addFund, updateFund: updateFund, removeFund: removeFund, depositFund: depositFund,
   curMonth: curMonth, getBudget: getBudget, setBudgetAmount: setBudgetAmount,
