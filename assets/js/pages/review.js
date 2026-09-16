@@ -76,7 +76,7 @@
  function summaryCard(dateStr) {
   var s = weekSummary(dateStr);
   return '<div class="card tight">' +
-   '<b style="font-size:13px">本周数据自动汇总（供复盘参考）</b>' +
+   '<b style="font-size:var(--fs-3)">本周数据自动汇总（供复盘参考）</b>' +
    '<div class="chips" style="margin-top:9px">' +
     '<span class="chip">专注 ' + UI.fmtMin(s.focus) + '</span>' +
     '<span class="chip">番茄 ' + s.pomos + ' 个</span>' +
@@ -231,7 +231,7 @@
    '</div>' +
    '<div class="cal-week"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div>' +
    '<div class="cal-grid">' + grid + '</div>' +
-   '<div class="muted" style="text-align:center;margin-top:12px;font-size:11.5px">点击日期查看当日复盘与待办，也可添加带时间的待办 </div>' +
+   '<div class="muted" style="text-align:center;margin-top:12px;font-size:var(--fs-4)">点击日期查看当日复盘与待办，也可添加带时间的待办 </div>' +
    '<div style="height:24px"></div></div>';
  }
 
@@ -268,12 +268,12 @@
   return '<div class="fade-in">' +
    '<div class="card tight row" style="margin-bottom:14px">' +
     '<button class="mini-act" id="backCal"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg></button>' +
-    '<div class="grow" style="margin-left:8px"><b style="font-size:15px">' + date.slice(5).replace('-', '/') + '</b>' +
-     '<div class="muted" style="font-size:11px">' + Store.weekName(date) + '</div></div>' +
+    '<div class="grow" style="margin-left:8px"><b style="font-size:var(--fs-2)">' + date.slice(5).replace('-', '/') + '</b>' +
+     '<div class="muted" style="font-size:var(--fs-4)">' + Store.weekName(date) + '</div></div>' +
    '</div>' +
    '<div class="card tight">' +
     '<div class="sec-title"><h2><span class="bar-mark"></span>任务完成度</h2></div>' +
-    '<div class="row" style="justify-content:space-between;font-size:13px"><span class="muted">当日计划</span><b>' + doneN + ' / ' + tasks.length + ' 已完成</b></div>' +
+    '<div class="row" style="justify-content:space-between;font-size:var(--fs-3)"><span class="muted">当日计划</span><b>' + doneN + ' / ' + tasks.length + ' 已完成</b></div>' +
     (tasks.length ? '<div class="fund-prog" style="margin-top:9px"><i style="width:' + tpct + '%"></i></div>' : '') +
    '</div>' +
    '<div class="card">' +
@@ -303,7 +303,7 @@
    '<h4><span>' + esc(r.range || r.date || '') + '</span><span class="tag blue">' + tm + '</span></h4>' +
    (preview ? '<p>' + esc(preview) + '</p>' : '') +
    imagesHtml(r) +
-   '<div class="muted" style="font-size:11px;margin-top:8px">' +
+   '<div class="muted" style="font-size:var(--fs-4);margin-top:8px">' +
     new Date(r.updatedAt || r.createdAt).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) + ' 更新</div>' +
    '</div>';
  }
@@ -324,8 +324,8 @@
    '<div class="card">' +
     '<div class="row" style="margin-bottom:6px">' +
      '<button class="mini-act" id="backList"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg></button>' +
-     '<div class="grow" style="margin-left:8px"><b style="font-size:15px">' + esc(r.range || r.date || '') + '</b>' +
-      '<div class="muted" style="font-size:11px">' + (TYPE_NAME[r.type] || '复盘') + (r.week ? ' · ' + esc(r.week) : '') + '</div></div>' +
+     '<div class="grow" style="margin-left:8px"><b style="font-size:var(--fs-2)">' + esc(r.range || r.date || '') + '</b>' +
+      '<div class="muted" style="font-size:var(--fs-4)">' + (TYPE_NAME[r.type] || '复盘') + (r.week ? ' · ' + esc(r.week) : '') + '</div></div>' +
      '<button class="pill-btn plain" id="editReview">编辑</button>' +
     '</div>' +
     '<div class="rv-detail">' +
