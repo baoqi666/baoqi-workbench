@@ -296,8 +296,9 @@
   return Notification.permission; // granted / denied / default
  }
 
- global.Push = {
-  current: current, sync: sync, ensurePermission: ensurePermission,
-  nativeAvailable: nativeLN, status: status
- };
+global.Push = {
+ current: current, sync: sync, ensurePermission: ensurePermission,
+ nativeAvailable: nativeLN, status: status,
+ scheduleTodoReminders: scheduleTodoReminders, cancelTodoReminder: cancelTodoReminder
+};
 })(window);
