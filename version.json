@@ -1,4 +1,4 @@
 {
-  "build": "20260916-1830",
-  "note": "修复加载白屏（store.js 补齐 updateTodo 函数）；补齐 Push 的待办提醒导出（scheduleTodoReminders / cancelTodoReminder）；复盘图片、待办提醒、抽屉文案精简"
+  "build": "20260916-1840",
+  "note": "首页移除「每日提醒」卡片（提醒内容已在各模块展示，避免重复）；修复加载白屏（store.js）；补齐待办提醒导出（push.js）"
 }
