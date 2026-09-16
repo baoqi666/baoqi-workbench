@@ -544,7 +544,7 @@ input,textarea,select{outline:none}
 .link-btn.danger{color:var(--danger)}
 
 /* ==========================================================
-  新增：复盘日历 / 待办 / 基金 / 自信表达 / 充能
+  新增：复盘日历 / 待办 / 基金 / 玉琢 / 充能
   ========================================================== */
 /* 计划页充能按钮 */
 .energy-head .eh-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;font-size:11.5px;line-height:1.7;color:var(--ink-2)}
@@ -690,7 +690,7 @@ input,textarea,select{outline:none}
 #pushToggle{flex:none}
 #pushToggle.plain{background:var(--brand-soft);color:var(--brand-ink);border:1px solid transparent}
 
-/* ============ 自信表达·每日深度思考 ============ */
+/* ============ 玉琢·每日深度思考 ============ */
 .daily-deep{padding:15px 16px 17px}
 .daily-deep .deep-quote{
  font-size:14.5px;
