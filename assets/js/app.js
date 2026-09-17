@@ -188,17 +188,19 @@
  /* ---------------- 全局底图：相册选择 + 智能取色 ---------------- */
  var THEME_KEYS = ['--bg', '--card', '--card-2', '--line', '--line-2', '--ink', '--ink-2', '--ink-3',
   '--brand', '--brand-ink', '--brand-soft', '--on-brand', '--shadow',
-  '--wall-scrim', '--wall-blur', '--wall-sat', '--wall-bri', '--splash-veil'];
+  '--wall-scrim', '--wall-blur', '--wall-sat', '--wall-bri', '--splash-veil',
+  '--splash-glow', '--scene', '--wall-src'];
 
  function setWallImage(src) {
   var w = $('#wallpaper'), s = $('#wallScrim');
+  var root = document.documentElement;
   if (!w) return;
   if (src) {
-   w.style.backgroundImage = 'url("' + src + '")';
+   root.style.setProperty('--wall-src', 'url("' + src + '")');   // 与开屏共用同一底图源
    w.classList.add('on');
    if (s) s.classList.add('on');
   } else {
-   w.style.backgroundImage = '';
+   root.style.removeProperty('--wall-src');
    w.classList.remove('on');
    if (s) s.classList.remove('on');
   }
