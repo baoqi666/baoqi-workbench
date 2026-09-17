@@ -124,10 +124,12 @@
    v['--brand-soft'] = hsl(h, s * 0.6, 0.93);
    v['--on-brand'] = '#ffffff';
    v['--shadow'] = '0 1px 2px rgba(50,40,18,.06), 0 6px 20px rgba(50,40,18,.06)';
-   v['--wall-scrim'] = rgba(255, 255, 255, 0.06 + busy * 0.20); // 0.06..0.26 轻度压暗，留氛围
-   v['--splash-veil'] = rgba(255, 255, 255, 0.18);
-   v['--splash-glow'] = rgba(255, 255, 255, 0.45);
-  } else {
+  v['--wall-scrim'] = rgba(255, 255, 255, 0.05 + busy * 0.12); // 0.05..0.17 极轻白色柔化，不压暗
+  v['--splash-veil'] = rgba(255, 255, 255, 0.18);
+  v['--splash-glow'] = rgba(255, 255, 255, 0.45);
+  // 底部柔和渐变：从透明过渡到极浅白，抬升底部、消除暗角，绝不出现黑块
+  v['--bottom-fade'] = 'linear-gradient(180deg, transparent 54%, ' + rgba(255, 255, 255, 0.10 + busy * 0.10) + ' 100%)';
+ } else {
    // —— 暗底图：深色半透明卡片 + 浅色文字 ——
    v['--bg'] = hsl(h, s * 0.35, 0.13);
    v['--scene'] = rgba(255, 255, 255, 0.04 + busy * 0.08);
@@ -143,10 +145,12 @@
    v['--brand-soft'] = rgba(255, 255, 255, 0.14);
    v['--on-brand'] = hsl(h, s * 0.6, 0.10);
    v['--shadow'] = '0 1px 2px rgba(0,0,0,.22), 0 8px 26px rgba(0,0,0,.26)';
-   v['--wall-scrim'] = rgba(8, 10, 14, 0.22 + busy * 0.22);
-   v['--splash-veil'] = rgba(8, 10, 14, 0.30);
-   v['--splash-glow'] = rgba(8, 10, 14, 0.42);
-  }
+  v['--wall-scrim'] = rgba(255, 255, 255, 0.10 + busy * 0.10); // 暗底图也不再压黑：浅白柔化
+  v['--splash-veil'] = rgba(8, 10, 14, 0.30);
+  v['--splash-glow'] = rgba(8, 10, 14, 0.42);
+  // 暗底图底部用浅色半透明渐变抬升（绝不黑色遮罩），比亮底图更强一档
+  v['--bottom-fade'] = 'linear-gradient(180deg, transparent 50%, ' + rgba(255, 255, 255, 0.18 + busy * 0.12) + ' 100%)';
+ }
   v['--wall-blur'] = '6px';                                  // 仅轻微柔化，保留纹理
   v['--wall-sat'] = '1';                                     // 不脱色，保留原图质感
   v['--wall-bri'] = dark ? '0.98' : '1';
@@ -156,7 +160,7 @@
  /* ---------- 3. 写入 / 清除 CSS 变量 ---------- */
  var KNOWN = ['--bg', '--scene', '--card', '--card-2', '--line', '--line-2', '--ink', '--ink-2', '--ink-3',
   '--brand', '--brand-ink', '--brand-soft', '--on-brand', '--shadow',
-  '--wall-scrim', '--wall-blur', '--wall-sat', '--wall-bri', '--splash-veil', '--splash-glow', '--wall-src'];
+  '--wall-scrim', '--wall-blur', '--wall-sat', '--wall-bri', '--splash-veil', '--splash-glow', '--wall-src', '--bottom-fade'];
 
  function applyVars(vars) {
   var root = doc.documentElement;
