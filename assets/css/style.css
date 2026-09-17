@@ -48,6 +48,9 @@
  --wall-bri:1;
  --wall-scrim:transparent;
  --splash-veil:#ffffff;
+ --splash-glow:transparent;
+ --scene:transparent;
+ --wall-src:none;
 }
 
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -95,11 +98,8 @@ input,textarea,select{outline:none}
  transition:opacity .4s ease;
 }
 .splash.hide{opacity:0;pointer-events:none}
-.splash-bg{
- position:absolute;inset:0;
- background:var(--card);
-}
-.splash-inner{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;flex:1}
+.splash-bg{position:absolute;inset:0}
+.splash-inner{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;flex:1}
 .splash-date{text-align:center;margin-bottom:6px}
 .s-date{font-size:var(--fs-display);font-weight:800;letter-spacing:.5px;color:var(--ink)}
 .s-week{margin-top:5px;font-size:var(--fs-3);color:var(--ink-2);display:flex;align-items:center;justify-content:center;gap:8px}
@@ -745,6 +745,7 @@ input,textarea,select{outline:none}
 /* ---- 全局底图：铺在所有界面最底层，做模糊 + 压暗/提亮 ---- */
 #wallpaper{
  position:absolute;inset:0;z-index:0;
+ background-image:var(--wall-src, none);
  background-size:cover;background-position:center;background-repeat:no-repeat;
  transform:scale(1.12);                 /* 放大裁掉模糊产生的边缘 */
  filter:blur(var(--wall-blur)) saturate(var(--wall-sat)) brightness(var(--wall-bri));
@@ -760,8 +761,21 @@ input,textarea,select{outline:none}
 }
 #wallScrim.on{opacity:1}
 
-/* ---- 开屏：跟随全局底图 + 每日称呼（一级标题） ---- */
-.splash-bg{background:var(--splash-veil)}
+/* ---- 开屏：独立前景层，背景用全局底图（选图后），无底图时用纯色，确保不透明、不开首页文字重影 ---- */
+.splash-bg{
+ position:absolute;inset:0;z-index:0;
+ background-color:var(--bg);                 /* 纯色兜底：无任何情况下都完全遮住后方首页 */
+ background-image:var(--wall-src, none);      /* 选了相册底图 → 开屏复用同一张，纹理保留 */
+ background-size:cover;background-position:center;background-repeat:no-repeat;
+ transform:scale(1.06);                       /* 同 #wallpaper，裁掉模糊边缘 */
+ filter:blur(var(--wall-blur)) saturate(var(--wall-sat)) brightness(var(--wall-bri));
+}
+.splash-bg::after{content:"";position:absolute;inset:0;background:var(--splash-veil)} /* 极淡柔和层，护纹理 */
+/* 正文区柔光：在「嗨，XXX」与按钮下方形成稳定清晰区域，避免文字直接压在复杂底图上 */
+.splash-glow{
+ position:absolute;inset:0;z-index:1;pointer-events:none;
+ background:radial-gradient(125% 82% at 50% 42%, var(--splash-glow), transparent 72%);
+}
 .splash-hi{
  font-size:var(--fs-1);
  font-weight:800;letter-spacing:.5px;
@@ -787,7 +801,7 @@ input,textarea,select{outline:none}
 .btn-primary,.btn-ghost,.btn{border-radius:var(--r-m)}
 
 /* ---- 间距规范化：主要容器统一走间距系统 ---- */
-.view{padding:var(--sp-4) var(--sp-4) calc(48px + var(--safe-b))}
+.view{padding:var(--sp-4) var(--sp-4) calc(48px + var(--safe-b));background:var(--scene)}
 .topbar{padding:calc(14px + var(--safe-t)) var(--sp-4) var(--sp-3)}
 .drawer-head{padding:0 var(--sp-4) 14px}
 .drawer-energy{padding:0 var(--sp-4) 14px}
