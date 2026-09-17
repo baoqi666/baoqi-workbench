@@ -72,8 +72,26 @@
     var score = t.n * (0.35 + hh.s) * (1 - Math.abs(hh.l - 0.55));
     if (score > bestScore) { bestScore = score; best = { r: cr, g: cg, b: cb2 }; }
    }
+   // —— 复杂度（busyness）：用于「底图越复杂，承载底板越不透明」的自适应 ——
+   var sumL = 0, sumL2 = 0, sumS = 0, cnt = 0, distinct = 0;
+   for (var k in buckets) {
+    var t = buckets[k];
+    var cr = t.r / t.n, cg = t.g / t.n, cb2 = t.b / t.n;
+    var hh = rgb2hsl(cr, cg, cb2);
+    var ll = 0.2126 * cr + 0.7152 * cg + 0.0722 * cb2;
+    sumL += ll; sumL2 += ll * ll; sumS += hh.s * t.n; cnt++;
+    if (t.n >= total * 0.008) distinct++;
+   }
+   var meanL = sumL / cnt, varL = sumL2 / cnt - meanL * meanL;
+   var stdL = Math.sqrt(Math.max(0, varL));
+   var avgSat = sumS / total;
+   var stdNorm = clamp(stdL * 2.3, 0, 1);
+   var distinctNorm = clamp((distinct - 3) / 9, 0, 1);
+   var satNorm = clamp(avgSat * 1.3, 0, 1);
+   var busy = clamp(0.55 * stdNorm + 0.25 * distinctNorm + 0.20 * satNorm, 0, 1);
+
    var main = best || avg;
-   cb({ main: main, avg: avg, lum: lum });
+   cb({ main: main, avg: avg, lum: lum, busy: busy });
   };
   img.onerror = function () { cb(null); };
   img.src = dataUrl;
@@ -87,53 +105,58 @@
   var s = clamp(c.s, 0.18, 0.40);   // 强制低饱和，避免高饱和撞色
   var lum = res.lum;
   var dark = lum < 0.50;            // 底图偏暗 → 深色卡片 + 浅色文字
+  var busy = res.busy || 0;         // 底图复杂度：越复杂，承载底板越不透明
 
   var v = {};
   if (!dark) {
    // —— 亮底图：浅色半透明卡片 + 深色文字 ——
    v['--bg'] = hsl(h, s * 0.45, 0.955);
-   v['--card'] = rgba(255, 255, 255, 0.82);
-   v['--card-2'] = rgba(255, 255, 255, 0.60);
-   v['--line'] = rgba(58, 52, 42, 0.13);
-   v['--line-2'] = rgba(58, 52, 42, 0.07);
-   v['--ink'] = hsl(h, 0.10, 0.18);
-   v['--ink-2'] = hsl(h, 0.08, 0.32);
-   v['--ink-3'] = hsl(h, 0.06, 0.48);
-   v['--brand'] = hsl(h, s, 0.46);
+   v['--scene'] = rgba(255, 255, 255, 0.28 + busy * 0.34);   // 内容承载层：0.28..0.62
+   v['--card'] = rgba(255, 255, 255, 0.78 + busy * 0.18);    // 卡片底板：0.78..0.96
+   v['--card-2'] = rgba(255, 255, 255, 0.55 + busy * 0.22);
+   v['--line'] = rgba(58, 52, 42, 0.12 + busy * 0.06);
+   v['--line-2'] = rgba(58, 52, 42, 0.07 + busy * 0.03);
+   v['--ink'] = hsl(h, 0.12, 0.16);                          // 标题：近黑，绝不发灰
+   v['--ink-2'] = hsl(h, 0.09, 0.30);                         // 正文：中灰
+   v['--ink-3'] = hsl(h, 0.07, 0.46);                         // 辅助：浅灰
+   v['--brand'] = hsl(h, s, 0.46);                            // 主题色：仅点缀，不碰底图
    v['--brand-ink'] = hsl(h, s, 0.33);
    v['--brand-soft'] = hsl(h, s * 0.6, 0.93);
    v['--on-brand'] = '#ffffff';
    v['--shadow'] = '0 1px 2px rgba(50,40,18,.06), 0 6px 20px rgba(50,40,18,.06)';
-   v['--wall-scrim'] = rgba(255, 255, 255, lum > 0.72 ? 0.34 : 0.20);
-   v['--splash-veil'] = rgba(255, 255, 255, 0.30);
+   v['--wall-scrim'] = rgba(255, 255, 255, 0.06 + busy * 0.20); // 0.06..0.26 轻度压暗，留氛围
+   v['--splash-veil'] = rgba(255, 255, 255, 0.18);
+   v['--splash-glow'] = rgba(255, 255, 255, 0.45);
   } else {
    // —— 暗底图：深色半透明卡片 + 浅色文字 ——
    v['--bg'] = hsl(h, s * 0.35, 0.13);
-   v['--card'] = rgba(255, 255, 255, 0.10);
-   v['--card-2'] = rgba(255, 255, 255, 0.06);
-   v['--line'] = rgba(255, 255, 255, 0.15);
-   v['--line-2'] = rgba(255, 255, 255, 0.09);
-   v['--ink'] = rgba(255, 255, 255, 0.95);
-   v['--ink-2'] = rgba(255, 255, 255, 0.78);
-   v['--ink-3'] = rgba(255, 255, 255, 0.58);
-   v['--brand'] = hsl(h, s, 0.62);
-   v['--brand-ink'] = hsl(h, s, 0.76);
-   v['--brand-soft'] = rgba(255, 255, 255, 0.13);
+   v['--scene'] = rgba(255, 255, 255, 0.04 + busy * 0.08);
+   v['--card'] = rgba(255, 255, 255, 0.10 + busy * 0.12);
+   v['--card-2'] = rgba(255, 255, 255, 0.06 + busy * 0.06);
+   v['--line'] = rgba(255, 255, 255, 0.14 + busy * 0.05);
+   v['--line-2'] = rgba(255, 255, 255, 0.08 + busy * 0.03);
+   v['--ink'] = rgba(255, 255, 255, 0.96);                    // 暗底 → 文字自动转浅灰白
+   v['--ink-2'] = rgba(255, 255, 255, 0.80);
+   v['--ink-3'] = rgba(255, 255, 255, 0.60);
+   v['--brand'] = hsl(h, s, 0.64);
+   v['--brand-ink'] = hsl(h, s, 0.78);
+   v['--brand-soft'] = rgba(255, 255, 255, 0.14);
    v['--on-brand'] = hsl(h, s * 0.6, 0.10);
    v['--shadow'] = '0 1px 2px rgba(0,0,0,.22), 0 8px 26px rgba(0,0,0,.26)';
-   v['--wall-scrim'] = rgba(8, 10, 14, 0.42);
+   v['--wall-scrim'] = rgba(8, 10, 14, 0.22 + busy * 0.22);
    v['--splash-veil'] = rgba(8, 10, 14, 0.30);
+   v['--splash-glow'] = rgba(8, 10, 14, 0.42);
   }
-  v['--wall-blur'] = '18px';
-  v['--wall-sat'] = '0.92';
-  v['--wall-bri'] = dark ? '0.95' : '1.04';
+  v['--wall-blur'] = '6px';                                  // 仅轻微柔化，保留纹理
+  v['--wall-sat'] = '1';                                     // 不脱色，保留原图质感
+  v['--wall-bri'] = dark ? '0.98' : '1';
   return v;
  }
 
  /* ---------- 3. 写入 / 清除 CSS 变量 ---------- */
- var KNOWN = ['--bg', '--card', '--card-2', '--line', '--line-2', '--ink', '--ink-2', '--ink-3',
+ var KNOWN = ['--bg', '--scene', '--card', '--card-2', '--line', '--line-2', '--ink', '--ink-2', '--ink-3',
   '--brand', '--brand-ink', '--brand-soft', '--on-brand', '--shadow',
-  '--wall-scrim', '--wall-blur', '--wall-sat', '--wall-bri', '--splash-veil'];
+  '--wall-scrim', '--wall-blur', '--wall-sat', '--wall-bri', '--splash-veil', '--splash-glow', '--wall-src'];
 
  function applyVars(vars) {
   var root = doc.documentElement;
@@ -149,15 +172,15 @@
  function scrimEl() { return doc.getElementById('wallScrim'); }
 
  function paintImage(src) {
+  var root = doc.documentElement;
   var w = wallEl(), s = scrimEl();
-  if (!w) return;
   if (src) {
-   w.style.backgroundImage = 'url("' + src + '")';
-   w.classList.add('on');
+   root.style.setProperty('--wall-src', 'url("' + src + '")');
+   if (w) w.classList.add('on');
    if (s) s.classList.add('on');
   } else {
-   w.style.backgroundImage = '';
-   w.classList.remove('on');
+   root.style.removeProperty('--wall-src');
+   if (w) w.classList.remove('on');
    if (s) s.classList.remove('on');
   }
  }
@@ -225,15 +248,16 @@
   img.src = dataUrl;
  }
 
- global.Theme = {
-  setWallpaper: setWallpaper,
-  clearWallpaper: function () { setWallpaper(''); },
-  preview: preview,
-  restore: restore,
-  snapshot: snapshot,
-  applyVars: applyVars,
-  clearVars: clearVars,
-  compress: compress,
-  analyze: analyze
- };
+global.Theme = {
+ setWallpaper: setWallpaper,
+ clearWallpaper: function () { setWallpaper(''); },
+ preview: preview,
+ restore: restore,
+ snapshot: snapshot,
+ applyVars: applyVars,
+ clearVars: clearVars,
+ compress: compress,
+ analyze: analyze,
+ buildVars: buildVars
+};
 })(window);
