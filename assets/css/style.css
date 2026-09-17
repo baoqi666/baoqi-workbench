@@ -28,12 +28,18 @@
  --safe-t:env(safe-area-inset-top,0px);
 
  /* ---- 四级文字体系（全应用统一，禁止再出现散落字号） ---- */
- --fs-1:21px;        /* 一级标题：页面主标题、开屏称呼 */
- --fs-2:16px;        /* 二级标题：卡片标题、分组标题 */
- --fs-3:14px;        /* 正文：主要内容 */
- --fs-4:12px;        /* 辅助文字：说明、备注、时间、标签 */
- --fs-display:28px;  /* 大号数字 / 日期 */
+ --fs-1:22px;        /* 一级标题：页面主标题、开屏称呼（较大 + 中偏粗） */
+ --fs-2:16px;        /* 二级标题：卡片标题、分组标题（中号 + 常规偏粗） */
+ --fs-3:14px;        /* 正文：主要内容（标准字号 + 常规字重） */
+ --fs-4:12px;        /* 辅助文字：说明、备注、时间、标签（小号 + 更轻字重） */
+ --fs-display:30px;  /* 大号数字 / 日期 */
  --fs-mark:40px;     /* 装饰引号 */
+
+ /* ---- 字重层级（与四级字号配套，消除「一样粗」的死板感） ---- */
+ --w-1:800;   /* 一级标题 / 大数字：中偏粗，有分量 */
+ --w-2:700;   /* 二级标题：常规偏粗，清晰但不抢 */
+ --w-3:400;   /* 正文：常规字重，易读 */
+ --w-4:400;   /* 辅助：常规字重 + 浅灰色，克制退后 */
 
  /* ---- 统一间距系统 ---- */
  --sp-1:4px;  --sp-2:8px;  --sp-3:12px; --sp-4:16px;
@@ -47,6 +53,7 @@
  --wall-sat:1;
  --wall-bri:1;
  --wall-scrim:transparent;
+ --bottom-fade:transparent;
  --splash-veil:#ffffff;
  --splash-glow:transparent;
  --scene:transparent;
@@ -120,7 +127,7 @@ input,textarea,select{outline:none}
  margin-bottom:18px;
 }
 .quote-mark{position:absolute;top:2px;left:14px;font-size:var(--fs-mark);color:var(--line);font-family:Georgia,serif;line-height:1}
-.quote-text{font-size:var(--fs-2);line-height:1.75;color:var(--ink);font-weight:500;min-height:52px;padding-left:6px}
+.quote-text{font-size:var(--fs-2);line-height:1.75;color:var(--ink);font-weight:var(--w-3);min-height:52px;padding-left:6px}
 .quote-foot{display:flex;align-items:center;justify-content:space-between;margin-top:10px}
 .quote-author{font-size:var(--fs-4);color:var(--ink-3)}
 .quote-refresh{display:inline-flex;align-items:center;gap:5px;font-size:var(--fs-4);color:var(--brand-ink);
@@ -149,7 +156,7 @@ input,textarea,select{outline:none}
  z-index:20;
 }
 .topbar-title{flex:1;min-width:0}
-.topbar-title h1{font-size:var(--fs-1);font-weight:800;letter-spacing:.2px}
+.topbar-title h1{font-size:var(--fs-1);font-weight:var(--w-1);letter-spacing:.2px}
 .topbar-title p{font-size:var(--fs-4);color:var(--ink-3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .topbar-right{display:flex;align-items:center;gap:8px}
 .icon-btn{
@@ -236,11 +243,11 @@ input,textarea,select{outline:none}
  border:1px solid var(--line);
  border-radius:var(--r-l);
  box-shadow:var(--shadow-sm);
- padding:16px;margin-bottom:14px;
+ padding:18px;margin-bottom:16px;
 }
-.card.tight{padding:13px 14px}
-.sec-title{display:flex;align-items:center;justify-content:space-between;margin:2px 0 11px}
-.sec-title h2{font-size:var(--fs-2);font-weight:800;display:flex;align-items:center;gap:7px}
+.card.tight{padding:15px 16px}
+.sec-title{display:flex;align-items:center;justify-content:space-between;margin:8px 0 12px;padding-bottom:9px;border-bottom:1px solid var(--line-2)}
+.sec-title h2{font-size:var(--fs-2);font-weight:var(--w-2);display:flex;align-items:center;gap:7px}
 .sec-title h2 .bar-mark{width:4px;height:15px;border-radius:var(--r-s);background:var(--brand)}
 .sec-title .more{font-size:var(--fs-4);color:var(--ink-3)}
 .muted{color:var(--ink-3);font-size:var(--fs-4)}
@@ -266,27 +273,27 @@ input,textarea,select{outline:none}
 .tag.gray{background:#f0efe9;color:#6c6b63}
 
 /* 统计卡 */
-.stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:14px}
+.stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px}
 .stat-card{
  position:relative;overflow:hidden;
- border-radius:var(--r-l);padding:14px;
+ border-radius:var(--r-l);padding:16px;
  background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow-sm);
 }
 .stat-card .ic{width:36px;height:36px;border-radius:var(--r-m);overflow:hidden;margin-bottom:9px;border:1px solid var(--line)}
 .stat-card .ic svg{width:100%;height:100%;display:block}
-.stat-card .num{font-size:var(--fs-1);font-weight:800;line-height:1.1;letter-spacing:-.5px}
+.stat-card .num{font-size:var(--fs-1);font-weight:var(--w-1);line-height:1.1;letter-spacing:-.5px}
 .stat-card .num small{font-size:var(--fs-4);font-weight:700;color:var(--ink-3);margin-left:2px}
-.stat-card .lb{font-size:var(--fs-4);color:var(--ink-2);margin-top:3px}
-.stat-card .sub{font-size:var(--fs-4);color:var(--ink-3);margin-top:6px;padding-top:6px;border-top:1px solid var(--line-2)}
+.stat-card .lb{font-size:var(--fs-4);color:var(--ink-2);margin-top:5px}
+.stat-card .sub{font-size:var(--fs-4);color:var(--ink-3);margin-top:9px;padding-top:8px;border-top:1px solid var(--line-2)}
 
 /* 大打卡卡片 */
 .streak-card{
  position:relative;overflow:hidden;
- border-radius:var(--r-l);padding:18px;margin-bottom:14px;
+ border-radius:var(--r-l);padding:20px;margin-bottom:16px;
  background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow-sm);
 }
 .streak-card .k{font-size:var(--fs-4);color:var(--ink-2)}
-.streak-card .v{font-size:var(--fs-mark);font-weight:800;line-height:1.05;margin-top:2px;color:var(--ink)}
+.streak-card .v{font-size:var(--fs-mark);font-weight:var(--w-1);line-height:1.05;margin-top:2px;color:var(--ink)}
 .streak-card .v small{font-size:var(--fs-3);font-weight:600;margin-left:4px;color:var(--ink-2)}
 .streak-card .cat{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:84px;opacity:.9;z-index:1}
 .streak-card .cat svg{width:100%;height:auto;display:block}
@@ -304,12 +311,12 @@ input,textarea,select{outline:none}
 
 /* 精力条 */
 .energy-head{
- border-radius:var(--r-l);padding:16px;margin-bottom:14px;
+ border-radius:var(--r-l);padding:18px;margin-bottom:16px;
  background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow-sm);
 }
 .energy-head .eh-top{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:12px}
 .energy-head .eh-left .t{font-size:var(--fs-4);color:var(--ink-2)}
-.energy-head .eh-left .n{font-size:var(--fs-display);font-weight:800;line-height:1.05;color:var(--ink)}
+.energy-head .eh-left .n{font-size:var(--fs-display);font-weight:var(--w-1);line-height:1.05;color:var(--ink)}
 .energy-head .eh-left .n small{font-size:var(--fs-3);font-weight:600;color:var(--ink-2)}
 .energy-head .eh-right{text-align:right;font-size:var(--fs-4);line-height:1.7;color:var(--ink-2)}
 .energy-bar{height:14px;border-radius:var(--r-s);background:var(--line);overflow:hidden;display:flex}
@@ -327,7 +334,7 @@ input,textarea,select{outline:none}
 .ring-wrap{position:relative;width:206px;height:206px;margin:0 auto}
 .ring-wrap svg{width:100%;height:100%;transform:rotate(-90deg)}
 .ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.ring-time{font-size:var(--fs-mark);font-weight:800;letter-spacing:-1px;font-variant-numeric:tabular-nums}
+.ring-time{font-size:var(--fs-mark);font-weight:var(--w-1);letter-spacing:-1px;font-variant-numeric:tabular-nums}
 .ring-phase{font-size:var(--fs-4);color:var(--ink-3);margin-top:2px}
 .ring-task{font-size:var(--fs-4);color:var(--brand-ink);margin-top:6px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .timer-ctrl{display:flex;justify-content:center;gap:12px;margin-top:16px}
@@ -377,7 +384,7 @@ input,textarea,select{outline:none}
 .group-head{display:flex;align-items:center;gap:8px;margin:14px 2px 9px}
 .group-head .gh-ic{width:26px;height:26px;border-radius:var(--r-s);overflow:hidden;border:1px solid var(--line)}
 .group-head .gh-ic svg{width:100%;height:100%;display:block}
-.group-head b{font-size:var(--fs-3)}
+.group-head b{font-size:var(--fs-3);font-weight:var(--w-2)}
 .group-head span{font-size:var(--fs-4);color:var(--ink-3)}
 
 /* FAB */
@@ -755,7 +762,7 @@ input,textarea,select{outline:none}
 #wallpaper.on{opacity:1}
 #wallScrim{
  position:absolute;inset:0;z-index:0;
- background:var(--wall-scrim);
+ background:var(--bottom-fade), var(--wall-scrim);
  opacity:0;transition:opacity .4s ease;
  pointer-events:none;
 }
@@ -778,7 +785,7 @@ input,textarea,select{outline:none}
 }
 .splash-hi{
  font-size:var(--fs-1);
- font-weight:800;letter-spacing:.5px;
+ font-weight:var(--w-1);letter-spacing:.5px;
  color:var(--ink);
  text-align:center;margin-bottom:var(--sp-2);
 }
