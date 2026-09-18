@@ -47,7 +47,7 @@ var _dueSession = null;
       s.running = false;
       if (s.phase === 'focus') {
        var isLong = creditFocus(s.taskId);
-       _dueSession = { minutes: CONF.focus / 60, taskId: s.taskId, natural: true, late: true, isLong: isLong };
+       _dueSession = { minutes: CONF.focus / 60, taskId: s.taskId, natural: true, late: true, isLong: isLong, endTs: s.endTs || Date.now() };
        s.endTs = 0;
        s.remain = phaseTotal();
        persist();
@@ -157,6 +157,7 @@ function creditFocus(tid) {
 function finishPhase() {
  var wasFocus = s.phase === 'focus';
  var tid = s.taskId;
+ var endAt = s.endTs || Date.now();   // 本轮真正的结束时刻（留给「留痕」记录用）
  if (wasFocus) {
   var isLong = creditFocus(s.taskId);
   UI.toast(isLong ? '完成 4 个番茄，进入长休息 15 分钟' : '一个番茄完成，休息 5 分钟');
@@ -172,7 +173,7 @@ function finishPhase() {
  emit();
  if (global.Pages && Pages.plan && Pages.plan.refresh) Pages.plan.refresh();
  if (global.App && App.syncChrome) App.syncChrome();
- if (wasFocus) fireFinish({ minutes: CONF.focus / 60, taskId: tid, natural: true });
+ if (wasFocus) fireFinish({ minutes: CONF.focus / 60, taskId: tid, natural: true, endTs: endAt });
 }
 
  var API = {
@@ -237,7 +238,7 @@ function finishPhase() {
    persist(); emit();
    if (global.Pages && Pages.plan && Pages.plan.refresh) Pages.plan.refresh();
    if (global.App && App.syncChrome) App.syncChrome();
-   if (!silent && recorded >= 1) fireFinish({ minutes: recorded, taskId: tid, natural: false });
+   if (!silent && recorded >= 1) fireFinish({ minutes: recorded, taskId: tid, natural: false, endTs: Date.now() });
    syncFocusNotify();          // 停止 → 撤销本轮通知
   },
   reset: function () {
