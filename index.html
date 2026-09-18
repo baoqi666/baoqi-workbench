@@ -72,6 +72,40 @@
   </div>
  </section>
 
+ <!-- ========== 专注启动台：开屏之后直接呈现的大号番茄钟 ========== -->
+ <section class="focus-gate" id="focusGate" hidden>
+  <div class="fg-scrim"></div>
+  <div class="fg-inner">
+   <div class="fg-kicker">番茄钟 · 现在就开始</div>
+   <div class="fg-sub" id="fgSub">选一项今天的计划，按下开始即进入 25 分钟专注</div>
+
+   <div class="fg-ring">
+    <svg viewBox="0 0 206 206">
+     <defs>
+      <linearGradient id="fgRingG" x1="0" y1="0" x2="1" y2="1">
+       <stop offset="0" stop-color="var(--brand)"/><stop offset="1" stop-color="var(--brand-ink)"/></linearGradient>
+      <linearGradient id="fgRingR" x1="0" y1="0" x2="1" y2="1">
+       <stop offset="0" stop-color="var(--ok)"/><stop offset="1" stop-color="var(--brand)"/></linearGradient>
+     </defs>
+     <circle cx="103" cy="103" r="92" fill="none" stroke="var(--line)" stroke-width="13"/>
+     <circle id="fgProg" cx="103" cy="103" r="92" fill="none" stroke-linecap="round" stroke-width="13"
+      stroke="url(#fgRingG)" stroke-dasharray="578.1" stroke-dashoffset="0"/>
+    </svg>
+    <div class="fg-center">
+     <div class="fg-time" id="fgTime">25:00</div>
+     <div class="fg-phase" id="fgPhase">专注中</div>
+    </div>
+   </div>
+
+   <div class="fg-picks" id="fgTasks"></div>
+
+   <div class="fg-actions">
+    <button class="enter-btn" id="fgStart" type="button">开始专注</button>
+    <button class="fg-skip" id="fgSkip" type="button">先进入工作台</button>
+   </div>
+  </div>
+ </section>
+
  <!-- ========== 主应用 ========== -->
  <div class="app" id="app" hidden>
   <header class="topbar">
