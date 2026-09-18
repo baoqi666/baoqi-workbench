@@ -6,6 +6,8 @@
  var ROUTES = ['home', 'plan', 'ideas', 'express', 'dream', 'reward', 'health', 'fitness', 'review', 'weeksum'];
  var current = null;
  var entered = false;
+ var fgHandle = null;    // 专注启动台的定时器监听
+ var fgTask = '';        // 启动台上选中的今日计划项
 
  /* ---------------- 开屏 ---------------- */
  function dayHash(s) {
@@ -133,6 +135,7 @@
   var moved = Store.rollover();
   var newSum = Store.autoArchiveWeeks();
   go('home');
+  openFocusGate();          // 开屏之后直接给一个大号番茄钟，可立即开始计时
   if (global.Push && Push.sync) Push.sync();
   if (global.Push && Push.scheduleTodoReminders) Push.scheduleTodoReminders();
   setTimeout(function () {
@@ -140,6 +143,194 @@
    else if (moved) UI.toast('有 ' + moved + ' 项未完成任务已留存到今天');
    else UI.toast('连续打卡第 ' + n + ' 天，欢迎回来 ');
   }, 620);
+ }
+
+ /* ============ 专注启动台：开屏之后直接呈现的大号番茄钟 ============ */
+ var FG_R = 92, FG_C = 2 * Math.PI * FG_R;
+
+ function fgChips() {
+  var list = Store.day(Store.today()).tasks.filter(function (t) { return !t.done; });
+  if (!list.length) return '<div class="fg-empty">今日计划还没安排任务，直接开始计时也可以</div>';
+  return list.map(function (t) {
+   return '<button type="button" class="fg-chip' + (fgTask === t.id ? ' on' : '') + '" data-fgtask="' + t.id + '">' +
+    UI.esc(t.title) + '</button>';
+  }).join('');
+ }
+
+ function fgRenderTasks() {
+  var box = $('#fgTasks');
+  if (!box) return;
+  box.innerHTML = fgChips();
+  $$('[data-fgtask]', box).forEach(function (b) {
+   b.onclick = function () {
+    fgTask = (fgTask === b.dataset.fgtask) ? '' : b.dataset.fgtask;
+    Timer.bind(fgTask);
+    fgRenderTasks();
+   };
+  });
+ }
+
+ function fgPaint(t) {
+  var gate = $('#focusGate');
+  if (!gate || gate.hidden || !t) return;
+  var tm = $('#fgTime'); if (tm) tm.textContent = t.text;
+  var ph = $('#fgPhase'); if (ph) ph.textContent = t.mode === 'pomo' ? t.phaseName : '自由计时';
+  var pr = $('#fgProg');
+  if (pr) {
+   pr.setAttribute('stroke-dashoffset', (FG_C * (1 - t.pct)).toFixed(1));
+   pr.setAttribute('stroke', 'url(#' + (t.mode === 'pomo' && t.phase !== 'focus' ? 'fgRingR' : 'fgRingG') + ')');
+  }
+  var st = $('#fgStart');
+  if (st) st.textContent = t.running ? '暂停' : (t.mode === 'pomo' ? '开始专注' : '开始计时');
+  var sk = $('#fgSkip');
+  if (sk) sk.textContent = t.running ? '带着计时器进入工作台' : '先进入工作台';
+ }
+
+ function openFocusGate() {
+  var gate = $('#focusGate');
+  if (!gate) return;
+  var t = Timer.get();
+  fgTask = t.taskId || '';
+  gate.hidden = false;
+  fgRenderTasks();
+  fgPaint(t);
+  setTimeout(function () { gate.classList.add('show'); }, 20);
+
+  var st = $('#fgStart');
+  if (st) st.onclick = function () {
+   var cur = Timer.get();
+   if (cur.running) { Timer.pause(); fgPaint(Timer.get()); syncChrome(); return; }
+   if (cur.mode !== 'pomo') Timer.setMode('pomo');
+   Timer.bind(fgTask);
+   Timer.start();
+   syncChrome();
+   UI.toast('专注开始 · ' + Math.round(Timer.get().seconds / 60) + ' 分钟后提醒你');
+   closeFocusGate();
+  };
+  var sk = $('#fgSkip');
+  if (sk) sk.onclick = function () { closeFocusGate(); };
+
+  if (fgHandle) Timer.off(fgHandle);
+  fgHandle = Timer.onChange(fgPaint);
+ }
+
+ function closeFocusGate() {
+  var gate = $('#focusGate');
+  if (!gate || gate.hidden) return;
+  gate.classList.remove('show');
+  if (fgHandle) { Timer.off(fgHandle); fgHandle = null; }
+  setTimeout(function () { gate.hidden = true; }, 400);
+  syncChrome();
+ }
+
+ /* ============ 计时结束 → 补录任务内容 → 自动完成今日计划项并记积分 ============ */
+ /** 在今日计划中按标题匹配（先全等、再包含），只匹配未完成项 */
+ function matchTodayTask(title) {
+  var list = Store.day(Store.today()).tasks;
+  var v = String(title || '').trim();
+  if (!v) return null;
+  var hit = null;
+  list.forEach(function (t) {
+   if (hit || t.done || !t.title) return;
+   if (String(t.title).trim() === v) hit = t;
+  });
+  if (hit) return hit;
+  list.forEach(function (t) {
+   if (hit || t.done || !t.title) return;
+   var tv = String(t.title).trim();
+   if (!tv) return;
+   if (tv.indexOf(v) >= 0 || v.indexOf(tv) >= 0) hit = t;
+  });
+  return hit;
+ }
+
+ function sessionSheet(info) {
+  info = info || {};
+  var td = Store.today();
+  var minutes = Math.max(1, Math.round(info.minutes || 0));
+  var bound = info.taskId ? Store.findTask(td, info.taskId) : null;
+  var undone = Store.day(td).tasks.filter(function (t) { return !t.done; });
+  var picks = undone.map(function (t) {
+   return '<button type="button" class="fg-chip" data-pick="' + t.id + '">' + UI.esc(t.title) + '</button>';
+  }).join('');
+  var tagKeys = Object.keys(Store.TAGS);
+  var initTag = bound ? (bound.tag || 'other') : 'other';
+
+  UI.sheet(
+   '<h3>这一轮专注完成了</h3>' +
+   '<p class="muted" style="text-align:center;margin:-6px 0 14px;font-size:var(--fs-4)">' +
+    '刚刚专注 ' + minutes + ' 分钟 · 写下这次在做的事，自动完成今日计划里对应的一项并记入积分</p>' +
+   (picks ? '<div class="field"><label>今日计划（点一下直接选）</label><div class="fg-picks">' + picks + '</div></div>' : '') +
+   '<div class="field"><label>本次任务内容</label>' +
+    '<input type="text" id="sessTitle" maxlength="40" placeholder="例如：英语听力精听" value="' +
+     (bound ? UI.esc(bound.title) : '') + '"/></div>' +
+   '<div class="field" id="sessTagWrap"><label>统计归类（用于首页大屏）</label><div class="seg" id="sessTag">' +
+    tagKeys.map(function (k) {
+     return '<button type="button" data-val="' + k + '" class="' + (k === initTag ? 'on' : '') + '">' +
+      Store.TAGS[k].name + '</button>';
+    }).join('') + '</div></div>' +
+   '<div class="sheet-actions">' +
+    '<button class="btn-ghost" data-act="skip">先不记录</button>' +
+    '<button class="btn-primary" data-act="ok">完成并记入</button>' +
+   '</div>',
+   function (el) {
+    var input = el.querySelector('#sessTitle');
+    var tagWrap = el.querySelector('#sessTagWrap');
+    var tagBox = el.querySelector('#sessTag');
+    var tag = initTag;
+
+    function syncTag() {
+     if (!tagWrap) return;
+     var v = input ? input.value.trim() : '';
+     tagWrap.hidden = !!(v && matchTodayTask(v));   // 命中已有计划项 → 归类跟随该项
+    }
+    if (tagBox) {
+     $$('button', tagBox).forEach(function (b) {
+      b.onclick = function () {
+       tag = b.dataset.val;
+       $$('button', tagBox).forEach(function (x) { x.classList.toggle('on', x === b); });
+      };
+     });
+    }
+    $$('[data-pick]', el).forEach(function (b) {
+     b.onclick = function () {
+      var t = Store.findTask(td, b.dataset.pick);
+      if (!t || !input) return;
+      input.value = t.title;
+      tag = t.tag || 'other';
+      if (tagBox) $$('button', tagBox).forEach(function (x) { x.classList.toggle('on', x.dataset.val === tag); });
+      $$('[data-pick]', el).forEach(function (x) { x.classList.toggle('on', x === b); });
+      syncTag();
+     };
+    });
+    if (input) {
+     input.addEventListener('input', syncTag);
+     syncTag();
+     setTimeout(function () { try { input.focus(); } catch (e) {} }, 260);
+    }
+    var sk = el.querySelector('[data-act=skip]');
+    if (sk) sk.onclick = UI.closeSheet;
+    el.querySelector('[data-act=ok]').onclick = function () {
+     var title = input ? input.value.trim() : '';
+     if (!title) { UI.toast('先写下这次在做的事'); if (input) input.focus(); return; }
+     var before = Store.availablePoints();
+     var target = matchTodayTask(title);
+     if (!target) {
+      target = Store.addTask(td, {
+       title: title, cat: 'invest', tag: tag, priority: 'mid',
+       estMin: Math.max(5, minutes), level: 2
+      });
+     }
+     // 本次专注时长转正到该任务（未绑定时原先记在「其他」下），当日专注总时长不重复累加
+     if (Store.attributeFocus) Store.attributeFocus(td, minutes, info.taskId || '', target.id);
+     Store.toggleTask(td, target.id);
+     UI.closeSheet();
+     var gain = Math.max(0, Store.availablePoints() - before);
+     if (current === 'home' || current === 'plan') go(current); else syncChrome();
+     UI.toast('已完成「' + title + '」 · 专注 +' + minutes + ' 分钟' + (gain ? ' · 积分 +' + gain : ''));
+    };
+   }
+  );
  }
 
  /* ---------------- PWA：安装到主屏 ---------------- */
@@ -594,6 +785,7 @@
   setupWallpaper();
   Timer.init();
   Timer.onChange(function (t) { syncMini(t); });
+  Timer.onFinish(function (info) { sessionSheet(info); });   // 计时结束 → 补录任务 → 自动完成计划项
   $('#miniTimer').onclick = function () { go('plan'); };
 
   // 首次打开提示：每人自动获得独立副本（数据仅存本地，与分享者互不可见）
