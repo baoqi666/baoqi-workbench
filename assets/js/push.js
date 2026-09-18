@@ -8,6 +8,11 @@
 (function (global) {
  var KEY = 'catdesk.push.markers';
  var ID = { week: 2001, sentence: 2002, health: 2003, beauty: 2004 };
+ /* 自建高优先级通知渠道。
+    插件默认那条渠道 id='default' 是 IMPORTANCE_DEFAULT(3)，只会「叮一声 + 落在通知栏」，
+    不会弹横幅（很多人因此以为「没收到」）。渠道的重要性一旦注册就无法再改，
+    所以只能新建一条 importance=4(HIGH) 的渠道，并让所有通知都用它。 */
+ var CHANNEL = 'focus';
 
  function markers() {
   try { return JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { return {}; }
@@ -80,24 +85,40 @@
  /* 权限状态（同步标记：null=未知, granted/denied） */
  var _perm = null;
 
- /* 权限 */
- async function ensurePermission() {
-  var ln = nativeLN();
-  if (ln) {
-   try {
-    var st = await ln.checkPermissions();
-    if (st && st.display === 'granted') { _perm = 'granted'; return 'granted'; }
-    if (st && st.display === 'denied') { _perm = 'denied'; return 'denied'; }
-    var r = await ln.requestPermissions();
-    if (r && r.display === 'granted') { _perm = 'granted'; return 'granted'; }
-    _perm = 'denied'; return 'denied';
-   } catch (e) { return 'error'; }
-  }
-  if (!('Notification' in window)) return 'unsupported';
-  if (Notification.permission === 'granted') { _perm = 'granted'; return 'granted'; }
-  if (Notification.permission === 'denied') { _perm = 'denied'; return 'denied'; }
-  try { var p = await Notification.requestPermission(); if (p === 'granted') _perm = 'granted'; return p; } catch (e) { return 'denied'; }
+/* 权限 */
+async function ensurePermission() {
+ var ln = nativeLN();
+ if (ln) {
+  try {
+   var st = await ln.checkPermissions();
+   if (st && st.display === 'granted') { _perm = 'granted'; await ensureChannel(ln); return 'granted'; }
+   if (st && st.display === 'denied') { _perm = 'denied'; return 'denied'; }
+   var r = await ln.requestPermissions();
+   if (r && r.display === 'granted') { _perm = 'granted'; await ensureChannel(ln); return 'granted'; }
+   _perm = 'denied'; return 'denied';
+  } catch (e) { return 'error'; }
  }
+ if (!('Notification' in window)) return 'unsupported';
+ if (Notification.permission === 'granted') { _perm = 'granted'; return 'granted'; }
+ if (Notification.permission === 'denied') { _perm = 'denied'; return 'denied'; }
+ try { var p = await Notification.requestPermission(); if (p === 'granted') _perm = 'granted'; return p; } catch (e) { return 'denied'; }
+}
+
+/* 建/确认高优先级渠道（Android 8+ 才有渠道概念，低版本 createChannel 会 reject，忽略即可） */
+var _channelReady = false;
+async function ensureChannel(ln) {
+ if (_channelReady || !ln || typeof ln.createChannel !== 'function') return;
+ _channelReady = true;
+ try {
+  await ln.createChannel({
+   id: CHANNEL, name: '专注与提醒',
+   description: '番茄钟到时 · 待办提醒 · 每日一句话',
+   importance: 4,          // HIGH：弹横幅 + 响铃 + 锁屏可见，跟其他 App 一样
+   visibility: 1,           // 锁屏显示完整内容
+   vibration: true, lights: true
+  });
+ } catch (e) { _channelReady = false; }
+}
 
  async function cancelNative(ids) {
   var ln = nativeLN();
@@ -140,6 +161,7 @@ function withIdle(items) {
   var c = JSON.parse(JSON.stringify(it));
   c.schedule = c.schedule || {};
   if (c.schedule.allowWhileIdle === undefined) c.schedule.allowWhileIdle = true;
+  if (c.channelId === undefined) c.channelId = CHANNEL;   // 走高优先级渠道才能弹横幅
   return c;
  });
 }
