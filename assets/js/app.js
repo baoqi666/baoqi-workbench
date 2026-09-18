@@ -173,17 +173,25 @@
  function fgPaint(t) {
   var gate = $('#focusGate');
   if (!gate || gate.hidden || !t) return;
+  var pomo = t.mode === 'pomo';
+  // 「本轮已进行了一部分但当前没在跑」= 暂停中
+  var mid = pomo && t.phase === 'focus' && t.seconds > 0 && t.seconds < Timer.CONF.focus;
   var tm = $('#fgTime'); if (tm) tm.textContent = t.text;
-  var ph = $('#fgPhase'); if (ph) ph.textContent = t.mode === 'pomo' ? t.phaseName : '自由计时';
+  var ph = $('#fgPhase'); if (ph) ph.textContent = pomo ? t.phaseName : '自由计时';
+  var sub = $('#fgSub');
+  if (sub) sub.textContent = t.running
+   ? '正在专注中 · 需要时点下方「带着计时器进入工作台」'
+   : (mid ? '已暂停 · 继续专注，或进入工作台'
+          : '选一项今日计划，按下开始即进入专注 · 不必先进工作台');
   var pr = $('#fgProg');
   if (pr) {
    pr.setAttribute('stroke-dashoffset', (FG_C * (1 - t.pct)).toFixed(1));
-   pr.setAttribute('stroke', 'url(#' + (t.mode === 'pomo' && t.phase !== 'focus' ? 'fgRingR' : 'fgRingG') + ')');
+   pr.setAttribute('stroke', 'url(#' + (pomo && t.phase !== 'focus' ? 'fgRingR' : 'fgRingG') + ')');
   }
   var st = $('#fgStart');
-  if (st) st.textContent = t.running ? '暂停' : (t.mode === 'pomo' ? '开始专注' : '开始计时');
+  if (st) st.textContent = t.running ? '暂停' : (mid ? '继续专注' : (pomo ? '开始专注' : '开始计时'));
   var sk = $('#fgSkip');
-  if (sk) sk.textContent = t.running ? '带着计时器进入工作台' : '先进入工作台';
+  if (sk) sk.textContent = (t.running || mid) ? '带着计时器进入工作台' : '先进入工作台';
  }
 
  function openFocusGate() {
@@ -203,9 +211,10 @@
    if (cur.mode !== 'pomo') Timer.setMode('pomo');
    Timer.bind(fgTask);
    Timer.start();
+   fgPaint(Timer.get());
    syncChrome();
    UI.toast('专注开始 · ' + Math.round(Timer.get().seconds / 60) + ' 分钟后提醒你');
-   closeFocusGate();
+   // 刻意「不」自动进入工作台：就停在启动台上直接计时，需要时再点「带着计时器进入工作台」
   };
   var sk = $('#fgSkip');
   if (sk) sk.onclick = function () { closeFocusGate(); };
@@ -244,94 +253,144 @@
   return hit;
  }
 
- function sessionSheet(info) {
-  info = info || {};
-  var td = Store.today();
-  var minutes = Math.max(1, Math.round(info.minutes || 0));
-  var bound = info.taskId ? Store.findTask(td, info.taskId) : null;
-  var undone = Store.day(td).tasks.filter(function (t) { return !t.done; });
-  var picks = undone.map(function (t) {
-   return '<button type="button" class="fg-chip" data-pick="' + t.id + '">' + UI.esc(t.title) + '</button>';
-  }).join('');
-  var tagKeys = Object.keys(Store.TAGS);
-  var initTag = bound ? (bound.tag || 'other') : 'other';
+function sessionSheet(info) {
+ info = info || {};
+ var td = Store.today();
+ var minutes = Math.max(1, Math.round(info.minutes || 0));
+ var bound = info.taskId ? Store.findTask(td, info.taskId) : null;
+ var undone = Store.day(td).tasks.filter(function (t) { return !t.done; });
+ var picks = undone.map(function (t) {
+  return '<button type="button" class="fg-chip" data-pick="' + t.id + '">' + UI.esc(t.title) + '</button>';
+ }).join('');
 
-  UI.sheet(
-   '<h3>这一轮专注完成了</h3>' +
-   '<p class="muted" style="text-align:center;margin:-6px 0 14px;font-size:var(--fs-4)">' +
-    '刚刚专注 ' + minutes + ' 分钟 · 写下这次在做的事，自动完成今日计划里对应的一项并记入积分</p>' +
-   (picks ? '<div class="field"><label>今日计划（点一下直接选）</label><div class="fg-picks">' + picks + '</div></div>' : '') +
-   '<div class="field"><label>本次任务内容</label>' +
-    '<input type="text" id="sessTitle" maxlength="40" placeholder="例如：英语听力精听" value="' +
-     (bound ? UI.esc(bound.title) : '') + '"/></div>' +
-   '<div class="field" id="sessTagWrap"><label>统计归类（用于首页大屏）</label><div class="seg" id="sessTag">' +
-    tagKeys.map(function (k) {
-     return '<button type="button" data-val="' + k + '" class="' + (k === initTag ? 'on' : '') + '">' +
-      Store.TAGS[k].name + '</button>';
-    }).join('') + '</div></div>' +
-   '<div class="sheet-actions">' +
-    '<button class="btn-ghost" data-act="skip">先不记录</button>' +
-    '<button class="btn-primary" data-act="ok">完成并记入</button>' +
-   '</div>',
-   function (el) {
-    var input = el.querySelector('#sessTitle');
-    var tagWrap = el.querySelector('#sessTagWrap');
-    var tagBox = el.querySelector('#sessTag');
-    var tag = initTag;
+ /* 与「每日计划 → 新增今日计划」完全同构的字段初始值 */
+ var v = {
+  title: bound ? bound.title : '',
+  cat: bound ? (bound.cat || 'invest') : 'invest',
+  tag: bound ? (bound.tag || 'other') : 'other',
+  priority: bound ? (bound.priority || 'mid') : 'mid',
+  estMin: bound ? (bound.estMin || minutes) : minutes,
+  level: bound ? (+bound.level || 2) : 2
+ };
+ var cur = { cat: v.cat, tag: v.tag, priority: v.priority, level: v.level };
 
-    function syncTag() {
-     if (!tagWrap) return;
-     var v = input ? input.value.trim() : '';
-     tagWrap.hidden = !!(v && matchTodayTask(v));   // 命中已有计划项 → 归类跟随该项
+ function segHtml(name, map, val, extra) {
+  return '<div class="seg" data-seg="' + name + '">' + Object.keys(map).map(function (k) {
+   return '<button type="button" data-val="' + k + '" class="' + (val === k ? 'on' : '') + '">' + map[k].name +
+    (extra && map[k].desc ? '<small>' + map[k].desc + '</small>' : '') + '</button>';
+  }).join('') + '</div>';
+ }
+ var lvHtml = '<div class="lv-seg" data-seg="level">' + [1, 2, 3, 4, 5].map(function (i) {
+  return '<button type="button" data-val="' + i + '" class="' + (+v.level === i ? 'on' : '') + '">' + i +
+   '<small>' + Store.ENERGY_MAP[i] + '</small></button>';
+ }).join('') + '</div>';
+
+ UI.sheet(
+  '<h3>这一轮专注完成了</h3>' +
+  '<p class="muted" style="text-align:center;margin:-6px 0 12px;font-size:var(--fs-4)">' +
+   '刚刚专注 ' + minutes + ' 分钟 · 像安排今日计划一样填好这次做的事，提交后自动勾选完成并记入积分</p>' +
+  (picks ? '<div class="field"><label>今日计划（点一下直接带入）</label><div class="fg-picks">' + picks + '</div></div>' : '') +
+  '<div class="muted" id="sessHint" style="margin:-6px 0 12px;font-size:var(--fs-4);color:var(--brand-ink)" ' +
+   (bound ? '' : 'hidden') + '></div>' +
+  '<div class="field"><label>任务名称</label>' +
+   '<input type="text" id="fTitle" maxlength="40" placeholder="例如：英语听力精听 25 分钟" value="' +
+    UI.esc(v.title) + '"/></div>' +
+  '<div class="field"><label>任务分类</label>' + segHtml('cat', Store.CATS, v.cat, true) + '</div>' +
+  '<div class="field"><label>统计归类（自动同步到首页大屏）</label>' + segHtml('tag', Store.TAGS, v.tag) + '</div>' +
+  '<div class="field"><label>优先级</label>' + segHtml('priority', Store.PRIOS, v.priority) + '</div>' +
+  '<div class="field"><label>预计时长（分钟）</label>' +
+   '<input type="number" id="fMin" min="5" max="480" step="5" value="' + (v.estMin || minutes) + '"/></div>' +
+  '<div class="field"><label id="lvLabel">精力消耗档位（1~5 级）</label>' + lvHtml + '</div>' +
+  '<div class="sheet-actions">' +
+   '<button class="btn-ghost" data-act="skip">先不记录</button>' +
+   '<button class="btn-primary" data-act="ok">完成并记入</button>' +
+  '</div>',
+  function (el) {
+   var input = el.querySelector('#fTitle');
+   var minEl = el.querySelector('#fMin');
+   var hint = el.querySelector('#sessHint');
+   var lvBox = el.querySelector('.lv-seg');
+   var lvLabel = el.querySelector('#lvLabel');
+
+   /** 档位区跟着任务分类变色（与计划页一致） */
+   function syncLv() {
+    if (lvBox) lvBox.className = 'lv-seg ' + (cur.cat === 'charge' ? 'green' : (cur.cat === 'system' ? 'warm' : ''));
+    if (lvLabel) lvLabel.textContent = cur.cat === 'charge' ? '精力恢复档位（1~5 级）' : '精力消耗档位（1~5 级）';
+   }
+   function setSeg(name, val) {
+    var box = el.querySelector('[data-seg="' + name + '"]');
+    if (!box) return;
+    UI.$$('button', box).forEach(function (b) { b.classList.toggle('on', b.dataset.val === String(val)); });
+   }
+   /** 命中今日计划项 → 把该项的填法整套带入（和编辑一条计划看到的一模一样） */
+   function applyMatch(t) {
+    if (!t) { if (hint) { hint.hidden = true; hint.textContent = ''; } return; }
+    cur.cat = t.cat || 'invest'; cur.tag = t.tag || 'other';
+    cur.priority = t.priority || 'mid'; cur.level = +t.level || 2;
+    setSeg('cat', cur.cat); setSeg('tag', cur.tag);
+    setSeg('priority', cur.priority); setSeg('level', cur.level);
+    syncLv();
+    if (minEl) minEl.value = t.estMin || minutes;
+    if (hint) {
+     hint.hidden = false;
+     hint.textContent = '已匹配今日计划项「' + t.title + '」，提交后直接勾选完成';
     }
-    if (tagBox) {
-     $$('button', tagBox).forEach(function (b) {
-      b.onclick = function () {
-       tag = b.dataset.val;
-       $$('button', tagBox).forEach(function (x) { x.classList.toggle('on', x === b); });
-      };
+   }
+
+   UI.$$('[data-seg]', el).forEach(function (g) {
+    var name = g.dataset.seg;
+    UI.segGroup(g, function (val) {
+     cur[name] = name === 'level' ? +val : val;
+     if (name === 'cat') syncLv();
+    });
+   });
+   syncLv();
+   if (bound) applyMatch(bound);
+
+   $$('[data-pick]', el).forEach(function (b) {
+    b.onclick = function () {
+     var t = Store.findTask(td, b.dataset.pick);
+     if (!t) return;
+     if (input) input.value = t.title;
+     applyMatch(t);
+     $$('[data-pick]', el).forEach(function (x) { x.classList.toggle('on', x === b); });
+    };
+   });
+   if (input) {
+    input.addEventListener('input', function () { applyMatch(matchTodayTask(input.value)); });
+    setTimeout(function () { try { input.focus(); } catch (e) {} }, 260);
+   }
+   var sk = el.querySelector('[data-act=skip]');
+   if (sk) sk.onclick = UI.closeSheet;
+   el.querySelector('[data-act=ok]').onclick = function () {
+    var title = input ? input.value.trim() : '';
+    if (!title) { UI.toast('先填写这次做的事'); if (input) input.focus(); return; }
+    var estMin = Math.max(5, (+(minEl && minEl.value)) || minutes);
+    var before = Store.availablePoints();
+    var target = matchTodayTask(title);
+    if (target) {
+     /* 命中已有计划项：按表单里的填法更新它，再勾选完成 */
+     Store.updateTask(td, target.id, {
+      title: title, cat: cur.cat, tag: cur.tag,
+      priority: cur.priority, estMin: estMin, level: cur.level
+     });
+    } else {
+     target = Store.addTask(td, {
+      title: title, cat: cur.cat, tag: cur.tag,
+      priority: cur.priority, estMin: estMin, level: cur.level
      });
     }
-    $$('[data-pick]', el).forEach(function (b) {
-     b.onclick = function () {
-      var t = Store.findTask(td, b.dataset.pick);
-      if (!t || !input) return;
-      input.value = t.title;
-      tag = t.tag || 'other';
-      if (tagBox) $$('button', tagBox).forEach(function (x) { x.classList.toggle('on', x.dataset.val === tag); });
-      $$('[data-pick]', el).forEach(function (x) { x.classList.toggle('on', x === b); });
-      syncTag();
-     };
-    });
-    if (input) {
-     input.addEventListener('input', syncTag);
-     syncTag();
-     setTimeout(function () { try { input.focus(); } catch (e) {} }, 260);
-    }
-    var sk = el.querySelector('[data-act=skip]');
-    if (sk) sk.onclick = UI.closeSheet;
-    el.querySelector('[data-act=ok]').onclick = function () {
-     var title = input ? input.value.trim() : '';
-     if (!title) { UI.toast('先写下这次在做的事'); if (input) input.focus(); return; }
-     var before = Store.availablePoints();
-     var target = matchTodayTask(title);
-     if (!target) {
-      target = Store.addTask(td, {
-       title: title, cat: 'invest', tag: tag, priority: 'mid',
-       estMin: Math.max(5, minutes), level: 2
-      });
-     }
-     // 本次专注时长转正到该任务（未绑定时原先记在「其他」下），当日专注总时长不重复累加
-     if (Store.attributeFocus) Store.attributeFocus(td, minutes, info.taskId || '', target.id);
-     Store.toggleTask(td, target.id);
-     UI.closeSheet();
-     var gain = Math.max(0, Store.availablePoints() - before);
-     if (current === 'home' || current === 'plan') go(current); else syncChrome();
-     UI.toast('已完成「' + title + '」 · 专注 +' + minutes + ' 分钟' + (gain ? ' · 积分 +' + gain : ''));
-    };
-   }
-  );
- }
+    // 本次专注时长转正到该任务（未绑定时原先记在「其他」下），当日专注总时长不重复累加
+    if (Store.attributeFocus) Store.attributeFocus(td, minutes, info.taskId || '', target.id);
+    Store.toggleTask(td, target.id);
+    UI.closeSheet();
+    var gain = Math.max(0, Store.availablePoints() - before);
+    if (current === 'home' || current === 'plan') go(current); else syncChrome();
+    UI.toast('已完成「' + title + '」 · 专注 +' + minutes + ' 分钟' + (gain ? ' · 积分 +' + gain : ''));
+   };
+  }
+ );
+}
 
  /* ---------------- PWA：安装到主屏 ---------------- */
  var deferredPrompt = null;
@@ -785,7 +844,7 @@
   setupWallpaper();
   Timer.init();
   Timer.onChange(function (t) { syncMini(t); });
-  Timer.onFinish(function (info) { sessionSheet(info); });   // 计时结束 → 补录任务 → 自动完成计划项
+  Timer.onFinish(function (info) { closeFocusGate(); sessionSheet(info); });   // 到点：收起启动台 → 弹出补录层
   $('#miniTimer').onclick = function () { go('plan'); };
 
   // 首次打开提示：每人自动获得独立副本（数据仅存本地，与分享者互不可见）
