@@ -107,10 +107,10 @@
   } catch (e) {}
  }
 
- /* 精确排程，失败降级为重复提醒 */
- async function doSchedule(LN, items) {
-  try {
-   await LN.schedule({ notifications: items });
+/* 精确排程，失败降级为重复提醒 */
+async function doSchedule(LN, items) {
+ try {
+   await LN.schedule({ notifications: withIdle(items) });
   } catch (e) {
    var fb = items.map(function (it) {
     var c = JSON.parse(JSON.stringify(it));
@@ -125,9 +125,24 @@
     return c;
    }).filter(Boolean);
    if (!fb.length) return;
-   try { await LN.schedule({ notifications: fb }); } catch (e2) {}
+   try { await LN.schedule({ notifications: withIdle(fb) }); } catch (e2) {}
   }
  }
+
+/* ★ 熄屏也要能收到：必须给每条原生排程加 allowWhileIdle: true。
+   插件里 `whileIdle = schedule.getBoolean("allowWhileIdle", false)` —— 默认 false 时走
+   `alarmManager.set(RTC, …)`，手机熄屏进入 Doze 后闹钟会被推迟到下次唤醒才响
+   （表现就是「熄屏收不到通知，一拿起手机才弹」）。
+   加了之后走 `setAndAllowWhileIdle(RTC_WAKEUP, …)`，待机中也能按时唤醒。
+   顺手把 Date 归一化成 ISO 字符串（原生侧解析的就是这个格式）。 */
+function withIdle(items) {
+ return items.map(function (it) {
+  var c = JSON.parse(JSON.stringify(it));
+  c.schedule = c.schedule || {};
+  if (c.schedule.allowWhileIdle === undefined) c.schedule.allowWhileIdle = true;
+  return c;
+ });
+}
 
  /* 原生排程：每周一长沙地 / 每日句子 / 每日健康 */
  async function scheduleNative() {
