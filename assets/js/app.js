@@ -257,6 +257,8 @@ function sessionSheet(info) {
  info = info || {};
  var td = Store.today();
  var minutes = Math.max(1, Math.round(info.minutes || 0));
+ var endAt = info.endTs || Date.now();      // 本轮真正的结束时刻
+ var settled = false;                        // 已按用户所填记入 → 关闭时不再补「留痕」
  var bound = info.taskId ? Store.findTask(td, info.taskId) : null;
  var undone = Store.day(td).tasks.filter(function (t) { return !t.done; });
  var picks = undone.map(function (t) {
@@ -273,6 +275,29 @@ function sessionSheet(info) {
   level: bound ? (+bound.level || 2) : 2
  };
  var cur = { cat: v.cat, tag: v.tag, priority: v.priority, level: v.level };
+
+ function hm(ts) {
+  var d = new Date(ts);
+  function p(n) { return (n < 10 ? '0' : '') + n; }
+  return p(d.getHours()) + ':' + p(d.getMinutes());
+ }
+
+ /** 用户没填就离开（点「跳过填写」/ 点遮罩 / Esc）→ 也必须留痕：
+     自动补一条已完成的计划项「专注 N 分钟 · 起-止」，把这段时长转到它名下。
+     因为 estMin = 实到时长，toggleTask 的 doneCredit 折算为 0 → 当日专注不重复累加。 */
+ function keepRecord() {
+  if (settled) return;
+  settled = true;
+  var title = '专注 ' + minutes + ' 分钟 · ' + hm(endAt - minutes * 60000) + '-' + hm(endAt);
+  var t = Store.addTask(td, {
+   title: title, cat: 'system', tag: 'other',
+   priority: 'mid', estMin: minutes, level: 2
+  });
+  if (Store.attributeFocus) Store.attributeFocus(td, minutes, info.taskId || '', t.id);
+  Store.toggleTask(td, t.id);
+  if (current === 'home' || current === 'plan') go(current); else syncChrome();
+  UI.toast('已自动记下这一轮「' + title + '」，稍后可改成你做的事');
+ }
 
  function segHtml(name, map, val, extra) {
   return '<div class="seg" data-seg="' + name + '">' + Object.keys(map).map(function (k) {
@@ -303,7 +328,7 @@ function sessionSheet(info) {
    '<input type="number" id="fMin" min="5" max="480" step="5" value="' + (v.estMin || minutes) + '"/></div>' +
   '<div class="field"><label id="lvLabel">精力消耗档位（1~5 级）</label>' + lvHtml + '</div>' +
   '<div class="sheet-actions">' +
-   '<button class="btn-ghost" data-act="skip">先不记录</button>' +
+   '<button class="btn-ghost" data-act="skip">跳过填写</button>' +
    '<button class="btn-primary" data-act="ok">完成并记入</button>' +
   '</div>',
   function (el) {
@@ -362,12 +387,15 @@ function sessionSheet(info) {
     setTimeout(function () { try { input.focus(); } catch (e) {} }, 260);
    }
    var sk = el.querySelector('[data-act=skip]');
-   if (sk) sk.onclick = UI.closeSheet;
+   if (sk) sk.onclick = function () { keepRecord(); UI.closeSheet(); };
+   /* 点遮罩 / Esc 关掉也一样要留痕（不留「没记录」的空档） */
+   if (UI.onClose) UI.onClose(keepRecord);
    el.querySelector('[data-act=ok]').onclick = function () {
     var title = input ? input.value.trim() : '';
     if (!title) { UI.toast('先填写这次做的事'); if (input) input.focus(); return; }
     var estMin = Math.max(5, (+(minEl && minEl.value)) || minutes);
     var before = Store.availablePoints();
+    settled = true;                            // 已按所填记入 → 关闭钩子不再补留痕
     var target = matchTodayTask(title);
     if (target) {
      /* 命中已有计划项：按表单里的填法更新它，再勾选完成 */
