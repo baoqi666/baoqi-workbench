@@ -310,12 +310,40 @@
   s.min += minutes;
   save();
  }
- function addPomo(date, taskId) {
-  var d = day(date);
-  d.pomos = (d.pomos || 0) + 1;
-  if (taskId) { var t = findTask(date, taskId); if (t) t.pomos = (t.pomos || 0) + 1; }
-  save();
+function addPomo(date, taskId) {
+ var d = day(date);
+ d.pomos = (d.pomos || 0) + 1;
+ if (taskId) { var t = findTask(date, taskId); if (t) t.pomos = (t.pomos || 0) + 1; }
+ save();
+}
+/** 补录任务时，把一次已计入的专注时长从原归属转移到目标任务
+ *  - 仅移动「任务上的时长」与「分类统计」，当日 focusMin 不变（避免重复计时）
+ *  - 原归属为空 / 已删除 → 视为记在「其他」分类下
+ */
+function attributeFocus(date, minutes, fromTaskId, toTaskId) {
+ minutes = Math.max(0, Math.round(minutes || 0));
+ if (!minutes || !toTaskId) return;
+ if (fromTaskId === toTaskId) return;
+ var to = findTask(date, toTaskId);
+ if (!to) return;
+ var fromTag = 'other';
+ if (fromTaskId) {
+  var f = findTask(date, fromTaskId);
+  if (f) {
+   fromTag = f.tag || 'other';
+   f.focusMin = Math.max(0, (f.focusMin || 0) - minutes);
+  }
  }
+ var toTag = to.tag || 'other';
+ to.focusMin = (to.focusMin || 0) + minutes;
+ if (fromTag !== toTag) {
+  var fs = state.stats[fromTag] || state.stats.other;
+  fs.min = Math.max(0, fs.min - minutes);
+  var ts = state.stats[toTag] || state.stats.other;
+  ts.min += minutes;
+ }
+ save();
+}
 
  /** 手动充能（计划页「+充能」按钮）：记录一笔精力恢复，不依赖任务 */
  function addCharge(date, amount, label) {
@@ -944,7 +972,7 @@ function addBudgetSaved(amount) {
   taskEnergy: taskEnergy, energyOf: energyOf,
   addTask: addTask, updateTask: updateTask, removeTask: removeTask,
   findTask: findTask, toggleTask: toggleTask, chargePomo: chargePomo,
-  addFocus: addFocus, addPomo: addPomo, addCharge: addCharge, addOutput: addOutput, rollover: rollover,
+  addFocus: addFocus, addPomo: addPomo, attributeFocus: attributeFocus, addCharge: addCharge, addOutput: addOutput, rollover: rollover,
   checkin: checkin, trend: trend, lastDays: lastDays, totalFocus: totalFocus,
   daysOnEarth: daysOnEarth, lifeProgress: lifeProgress, lifeXP: lifeXP,
   playerLevel: playerLevel, rpgAttrs: rpgAttrs, setBirth: setBirth,
