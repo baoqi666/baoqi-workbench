@@ -24,6 +24,7 @@
  var sheetCloseCb = null;
  function sheet(html, onMount) {
   var root = $('#modalRoot');
+  sheetCloseCb = null;   // 换了新弹层就清掉上一个的关闭钩子，避免误触发
   root.innerHTML = '<div class="mask" data-close="1"></div><div class="sheet">' +
    '<div class="sheet-grip"></div>' + html + '</div>';
   // 触发过渡
@@ -31,6 +32,9 @@
   root.querySelector('.mask').addEventListener('click', closeSheet);
   if (onMount) onMount(root.querySelector('.sheet'));
  }
+ /* 注册「本层被关掉时执行一次」的回调（点遮罩 / Esc / 主动 closeSheet 都会触发）。
+    用于「用户没填就离开 → 也必须留痕」这类兜底。 */
+ function onClose(fn) { sheetCloseCb = fn; }
  function closeSheet() {
   var root = $('#modalRoot');
   root.classList.remove('show');
@@ -119,7 +123,7 @@
 
  global.UI = {
   $: $, $$: $$, esc: esc, toast: toast,
-  sheet: sheet, closeSheet: closeSheet, confirm: confirmSheet,
+  sheet: sheet, closeSheet: closeSheet, onClose: onClose, confirm: confirmSheet,
   segGroup: segGroup, barChart: barChart, donut: donut,
   fmtMin: fmtMin, fmtMinShort: fmtMinShort, emptyBox: emptyBox
  };
