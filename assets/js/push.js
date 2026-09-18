@@ -118,9 +118,13 @@
     if (ty === 'week') c.schedule = { on: { weekday: 2, hour: 9, minute: 0 } };
     else if (ty === 'sentence') c.schedule = { on: { hour: 8, minute: 0 } };
     else if (ty === 'beauty') c.schedule = { on: { hour: 21, minute: 0 } };
+    /* 待办提醒 / 番茄结束都是一次性的「某个精确时刻」，不做重复降级
+       （否则会变成每天 20:00 的错点提醒，比不提醒更糟） */
+    else if (ty === 'todo' || ty === 'pomo') return null;
     else c.schedule = { on: { hour: 20, minute: 0 } };
     return c;
-   });
+   }).filter(Boolean);
+   if (!fb.length) return;
    try { await LN.schedule({ notifications: fb }); } catch (e2) {}
   }
  }
@@ -282,7 +286,53 @@
   if (ln) { try { await cancelNative([todoRemindId(date, id)]); } catch (e) {} }
  }
 
- /* 主入口：进入应用时调用，自动按周期排程 */
+ /* ---------------- 番茄钟「专注结束」通知 ----------------
+   与「今天 / 周日」这类日期周期完全无关：只要番茄钟真的跑起来，
+   就按它自己的精确结束时刻排一条通知；暂停 / 停止 / 跳过立即撤销。
+   - 原生（APK）：即使 APP 被关掉，到点系统也会弹（这才是关键）
+   - 网页：到点时由 notifyFocusEnd() 补一条系统通知（需页面开着）
+   注意：这是一次性提醒，只排一条，不参与 sync() 的周期重排。 */
+var FOCUS_ID = 3001;                 // 避开固定推送 2001~2004、待办 5000~8999
+var FOCUS_TITLE = '专注结束';
+var FOCUS_BODY = '这一轮 25 分钟专注完成，休息 5 分钟 · 记得记录刚才做了什么';
+var _focusScheduled = false;         // 本轮是否已成功排上原生通知
+
+/* 排程：endTs = 本轮专注的精确结束时刻（毫秒时间戳） */
+async function scheduleFocusEnd(endTs) {
+ if (!endTs || endTs - Date.now() < 1000) return;
+ var ln = nativeLN();
+ if (!ln) return;                   // 网页环境：到点由 notifyFocusEnd 兜底
+ try {
+  var perm = await ensurePermission();
+  if (perm !== 'granted') return;
+  await cancelNative([FOCUS_ID]);
+  await doSchedule(ln, [{
+   id: FOCUS_ID, title: FOCUS_TITLE, body: FOCUS_BODY,
+   schedule: { at: new Date(endTs) }, extra: { type: 'pomo' }
+  }]);
+  _focusScheduled = true;
+ } catch (e) {}
+}
+
+/* 撤销本轮通知（暂停 / 停止 / 跳过 / 换模式 / 已到点） */
+async function cancelFocusEnd() {
+ _focusScheduled = false;
+ var ln = nativeLN();
+ if (!ln) return;
+ try { await cancelNative([FOCUS_ID]); } catch (e) {}
+}
+
+/* 到点提示：应用内的提示由番茄钟自己弹，这里只补系统通知 */
+function notifyFocusEnd() {
+ if (_focusScheduled) return;       // 原生通知会自己弹，避免重复
+ try {
+  if (('Notification' in window) && Notification.permission === 'granted') {
+   new Notification(FOCUS_TITLE, { body: FOCUS_BODY });
+  }
+ } catch (e) {}
+}
+
+/* 主入口：进入应用时调用，自动按周期排程 */
  async function sync() {
   var ok = await scheduleNative();
   if (!ok) await fireWebIfNew();
@@ -299,6 +349,7 @@
 global.Push = {
  current: current, sync: sync, ensurePermission: ensurePermission,
  nativeAvailable: nativeLN, status: status,
- scheduleTodoReminders: scheduleTodoReminders, cancelTodoReminder: cancelTodoReminder
+ scheduleTodoReminders: scheduleTodoReminders, cancelTodoReminder: cancelTodoReminder,
+ scheduleFocusEnd: scheduleFocusEnd, cancelFocusEnd: cancelFocusEnd, notifyFocusEnd: notifyFocusEnd
 };
 })(window);
