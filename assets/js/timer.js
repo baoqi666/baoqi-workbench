@@ -28,6 +28,10 @@ function fireFinish(info) {
  finishCbs.forEach(function (f) { try { f(info); } catch (e) { } });
 }
 
+/* 恢复现场时发现「专注在 APP 关着 / 后台期间已经走完」→ 先补结算，
+   等 onFinish 注册好之后再把补录层弹出来（否则就是「通知弹了、番茄没了」） */
+var _dueSession = null;
+
  function persist() {
   IDB.set(TKEY, s);
  }
@@ -39,7 +43,18 @@ function fireFinish(info) {
     var now = Date.now();
     if (s.mode === 'pomo') {
      s.remain = Math.max(0, Math.round((s.endTs - now) / 1000));
-     if (s.remain <= 0) { s.running = false; s.remain = phaseTotal(); }
+     if (s.remain <= 0) {
+      s.running = false;
+      if (s.phase === 'focus') {
+       var isLong = creditFocus(s.taskId);
+       _dueSession = { minutes: CONF.focus / 60, taskId: s.taskId, natural: true, late: true, isLong: isLong };
+       s.endTs = 0;
+       s.remain = phaseTotal();
+       persist();
+      } else {
+       s.remain = phaseTotal();
+      }
+     }
     } else {
      s.elapsed = Math.max(0, Math.round((now - s.startTs) / 1000));
     }
@@ -111,18 +126,39 @@ function fireFinish(info) {
   } catch (e) { }
  }
 
+/** 番茄钟「专注结束」系统通知
+ *  开始计时 → 按本轮精确结束时刻排一条；暂停 / 停止 / 跳过 / 换模式 → 立即撤销。
+ *  与日期、星期无关：任何一天开始专注都会排（不依赖每日 / 每周推送周期）。 */
+function syncFocusNotify() {
+ if (!global.Push || !Push.scheduleFocusEnd) return;
+ try {
+  if (s.mode === 'pomo' && s.phase === 'focus' && s.running && s.endTs > 0) {
+   Push.scheduleFocusEnd(s.endTs);
+  } else if (Push.cancelFocusEnd) {
+   Push.cancelFocusEnd();
+  }
+ } catch (e) { }
+}
+
+/** 结算一个「已经走完」的专注番茄并切到休息阶段。返回是否进入长休息。
+ *  抽出来是为了让「APP 关着走完的番茄」也能走同一条结算路径。 */
+function creditFocus(tid) {
+ var td = Store.today();
+ Store.addPomo(td, tid);
+ Store.addFocus(td, tid, CONF.focus / 60);
+ if (tid) Store.chargePomo(td, tid);
+ s.cycle += 1;
+ var isLong = s.cycle % CONF.longEvery === 0;
+ s.phase = isLong ? 'long' : 'short';
+ return isLong;
+}
+
 /** 番茄阶段结束 */
 function finishPhase() {
- var td = Store.today();
  var wasFocus = s.phase === 'focus';
  var tid = s.taskId;
  if (wasFocus) {
-  Store.addPomo(td, s.taskId);
-  Store.addFocus(td, s.taskId, CONF.focus / 60);
-  if (s.taskId) Store.chargePomo(td, s.taskId);
-  s.cycle += 1;
-  var isLong = s.cycle % CONF.longEvery === 0;
-  s.phase = isLong ? 'long' : 'short';
+  var isLong = creditFocus(s.taskId);
   UI.toast(isLong ? '完成 4 个番茄，进入长休息 15 分钟' : '一个番茄完成，休息 5 分钟');
  } else {
   s.phase = 'focus';
@@ -156,6 +192,7 @@ function finishPhase() {
    s.remain = CONF.focus;
    s.elapsed = 0;
    persist(); emit();
+   syncFocusNotify();
   },
   bind: function (taskId) { s.taskId = taskId || ''; persist(); emit(); },
 
@@ -166,12 +203,14 @@ function finishPhase() {
    if (s.mode === 'pomo') s.endTs = now + s.remain * 1000;
    else s.startTs = now - s.elapsed * 1000;
    persist(); emit(); loop();
+   syncFocusNotify();          // 按本轮结束时刻排一条「专注结束」系统通知
   },
   pause: function () {
    if (!s.running) return;
    s.running = false;
    if (s.mode === 'pomo') s.remain = Math.max(0, Math.round((s.endTs - Date.now()) / 1000));
    persist(); emit();
+   syncFocusNotify();          // 暂停 → 撤销，避免暂停期间还弹「专注结束」
   },
   /** 停止：正计时结算耗时；番茄放弃当前 */
   stop: function (silent) {
@@ -199,6 +238,7 @@ function finishPhase() {
    if (global.Pages && Pages.plan && Pages.plan.refresh) Pages.plan.refresh();
    if (global.App && App.syncChrome) App.syncChrome();
    if (!silent && recorded >= 1) fireFinish({ minutes: recorded, taskId: tid, natural: false });
+   syncFocusNotify();          // 停止 → 撤销本轮通知
   },
   reset: function () {
    s.running = false;
@@ -207,6 +247,7 @@ function finishPhase() {
    s.elapsed = 0;
    s.endTs = 0;
    persist(); emit();
+   syncFocusNotify();
   },
   resetCycle: function () { s.cycle = 0; persist(); emit(); },
   /** 跳过当前阶段（用于休息阶段直接开始） */
@@ -216,8 +257,15 @@ function finishPhase() {
    s.remain = phaseTotal();
    s.running = false;
    persist(); emit();
+   syncFocusNotify();
   },
-  init: function () { restore().then(function () { emit(); }); loop(); emit(); }
+  init: function () {
+   restore().then(function () {
+    emit();
+    if (_dueSession) { var d = _dueSession; _dueSession = null; fireFinish(d); }
+   });
+   loop(); emit();
+  }
  };
 
  global.Timer = API;
