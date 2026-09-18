@@ -288,6 +288,7 @@ function sessionSheet(info) {
  UI.sheet(
   '<h3>这一轮专注完成了</h3>' +
   '<p class="muted" style="text-align:center;margin:-6px 0 12px;font-size:var(--fs-4)">' +
+   (info.late ? '上一轮专注在 APP 关闭时已经走完了 · ' : '') +
    '刚刚专注 ' + minutes + ' 分钟 · 像安排今日计划一样填好这次做的事，提交后自动勾选完成并记入积分</p>' +
   (picks ? '<div class="field"><label>今日计划（点一下直接带入）</label><div class="fg-picks">' + picks + '</div></div>' : '') +
   '<div class="muted" id="sessHint" style="margin:-6px 0 12px;font-size:var(--fs-4);color:var(--brand-ink)" ' +
@@ -844,7 +845,13 @@ function sessionSheet(info) {
   setupWallpaper();
   Timer.init();
   Timer.onChange(function (t) { syncMini(t); });
-  Timer.onFinish(function (info) { closeFocusGate(); sessionSheet(info); });   // 到点：收起启动台 → 弹出补录层
+  Timer.onFinish(function (info) {
+   closeFocusGate();
+   // 25 分钟自然走完 → 补一条系统通知（不看日期、不看星期）
+   // late = APP 关着时走完、刚打开才补结算的，人就在眼前，不必再弹通知
+   if (info && info.natural && !info.late && global.Push && Push.notifyFocusEnd) Push.notifyFocusEnd();
+   sessionSheet(info);
+  });                                  // 到点：收起启动台 → 提示 + 补录层
   $('#miniTimer').onclick = function () { go('plan'); };
 
   // 首次打开提示：每人自动获得独立副本（数据仅存本地，与分享者互不可见）
