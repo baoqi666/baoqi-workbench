@@ -58,6 +58,10 @@
  --splash-glow:transparent;
  --scene:transparent;
  --wall-src:none;
+
+ /* ---- 毛玻璃卡片：底色 / 磨砂 / 1px 淡白描边 ---- */
+ --edge:rgba(255,255,255,0.62);   /* 卡片 1px 淡白半透明描边 */
+ --frost:blur(9px);               /* 轻度磨砂模糊，拒绝过高模糊/塑料感 */
 }
 
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -806,6 +810,20 @@ input,textarea,select{outline:none}
 .pill-btn,.enter-btn{border-radius:var(--r-pill)}
 .pill-btn.plain{border-radius:var(--r-pill)}
 .btn-primary,.btn-ghost,.btn{border-radius:var(--r-m)}
+
+/* ---- 毛玻璃卡片：轻度磨砂 + 1px 淡白描边，独立于底图、不糊在一起 ---- */
+.card,.stat-card,.streak-card,.quote-card,.energy-head,.points-card,.task-item,.todo-item,.idea-item,.review-item,.reward-row,.fund-card,.step-item,.picker-row,.meal-item{
+ -webkit-backdrop-filter:var(--frost);
+ backdrop-filter:var(--frost);
+ background:var(--card);
+ border:1px solid var(--edge);
+}
+/* 顶栏同样磨砂，但保留底部细分隔、不加四边描边 */
+.topbar{
+ -webkit-backdrop-filter:var(--frost);
+ backdrop-filter:var(--frost);
+ background:var(--card);
+}
 
 /* ---- 间距规范化：主要容器统一走间距系统 ---- */
 .view{padding:var(--sp-4) var(--sp-4) calc(48px + var(--safe-b));background:var(--scene)}
