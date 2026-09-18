@@ -20,8 +20,13 @@
   startTs: 0
  };
 
- var listeners = [];
- var ticker = null;
+var listeners = [];
+var finishCbs = [];   // 计时结束（自然完成 / 手动结束且已记录时长）时的回调
+var ticker = null;
+
+function fireFinish(info) {
+ finishCbs.forEach(function (f) { try { f(info); } catch (e) { } });
+}
 
  function persist() {
   IDB.set(TKEY, s);
@@ -106,36 +111,42 @@
   } catch (e) { }
  }
 
- /** 番茄阶段结束 */
- function finishPhase() {
-  var td = Store.today();
-  if (s.phase === 'focus') {
-   Store.addPomo(td, s.taskId);
-   Store.addFocus(td, s.taskId, CONF.focus / 60);
-   if (s.taskId) Store.chargePomo(td, s.taskId);
-   s.cycle += 1;
-   var isLong = s.cycle % CONF.longEvery === 0;
-   s.phase = isLong ? 'long' : 'short';
-   UI.toast(isLong ? '完成 4 个番茄，进入长休息 15 分钟' : '一个番茄完成，休息 5 分钟');
-  } else {
-   s.phase = 'focus';
-   UI.toast('休息结束，准备下一个番茄 ~');
-  }
-  s.remain = phaseTotal();
-  s.running = false;
-  s.endTs = 0;
-  beep(s.phase === 'focus' ? 2 : 3);
-  persist();
-  emit();
-  if (global.Pages && Pages.plan && Pages.plan.refresh) Pages.plan.refresh();
-  if (global.App && App.syncChrome) App.syncChrome();
+/** 番茄阶段结束 */
+function finishPhase() {
+ var td = Store.today();
+ var wasFocus = s.phase === 'focus';
+ var tid = s.taskId;
+ if (wasFocus) {
+  Store.addPomo(td, s.taskId);
+  Store.addFocus(td, s.taskId, CONF.focus / 60);
+  if (s.taskId) Store.chargePomo(td, s.taskId);
+  s.cycle += 1;
+  var isLong = s.cycle % CONF.longEvery === 0;
+  s.phase = isLong ? 'long' : 'short';
+  UI.toast(isLong ? '完成 4 个番茄，进入长休息 15 分钟' : '一个番茄完成，休息 5 分钟');
+ } else {
+  s.phase = 'focus';
+  UI.toast('休息结束，准备下一个番茄 ~');
  }
+ s.remain = phaseTotal();
+ s.running = false;
+ s.endTs = 0;
+ beep(s.phase === 'focus' ? 2 : 3);
+ persist();
+ emit();
+ if (global.Pages && Pages.plan && Pages.plan.refresh) Pages.plan.refresh();
+ if (global.App && App.syncChrome) App.syncChrome();
+ if (wasFocus) fireFinish({ minutes: CONF.focus / 60, taskId: tid, natural: true });
+}
 
  var API = {
   CONF: CONF,
   get: snapshot,
   onChange: function (fn) { listeners.push(fn); return fn; },
   off: function (fn) { listeners = listeners.filter(function (f) { return f !== fn; }); },
+  /** 计时结束回调：{ minutes, taskId, natural } */
+  onFinish: function (fn) { finishCbs.push(fn); return fn; },
+  offFinish: function (fn) { finishCbs = finishCbs.filter(function (f) { return f !== fn; }); },
 
   setMode: function (m) {
    if (s.mode === m) return;
@@ -165,17 +176,20 @@
   /** 停止：正计时结算耗时；番茄放弃当前 */
   stop: function (silent) {
    var td = Store.today();
+   var tid = s.taskId;
+   var recorded = 0;
    if (s.mode === 'watch') {
     var min = Math.round(s.elapsed / 60);
     if (min > 0) {
      Store.addFocus(td, s.taskId, min);
      if (!silent) UI.toast('已记录本次耗时 ' + min + ' 分钟');
+     recorded = min;
     }
     s.elapsed = 0;
    } else {
     if (s.phase === 'focus' && !silent) {
      var done = Math.round((phaseTotal() - s.remain) / 60);
-     if (done >= 1) { Store.addFocus(td, s.taskId, done); UI.toast('已记录专注 ' + done + ' 分钟'); }
+     if (done >= 1) { Store.addFocus(td, s.taskId, done); UI.toast('已记录专注 ' + done + ' 分钟'); recorded = done; }
     }
     s.remain = phaseTotal();
    }
@@ -184,6 +198,7 @@
    persist(); emit();
    if (global.Pages && Pages.plan && Pages.plan.refresh) Pages.plan.refresh();
    if (global.App && App.syncChrome) App.syncChrome();
+   if (!silent && recorded >= 1) fireFinish({ minutes: recorded, taskId: tid, natural: false });
   },
   reset: function () {
    s.running = false;
