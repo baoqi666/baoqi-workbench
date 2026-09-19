@@ -104,29 +104,31 @@ function mood(key, opt) {
  var m = M[key] || M.xi;
  var ink = MOOD_INK[key] || MOOD_INK.xi;
  var tint = MOOD_TINT[key] || MOOD_TINT.xi;
+ /* 笔画刻意加粗 + 圆盘加描边：确保缩到日历小尺寸（~24px）时五官仍清晰可辨。
+  （初版用 3.x 的线宽，19px 下眼睛只有约 1.3px、嘴约 0.7px，几乎看不见） */
  var s = '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true" style="color:' + ink + '">';
- s += '<circle cx="50" cy="50" r="46" fill="' + tint + '"/>';
+ s += '<circle cx="50" cy="50" r="46" fill="' + tint + '" stroke="rgba(80,68,48,0.18)" stroke-width="3"/>';
  if (m.cheek) {
-  s += '<circle cx="30" cy="58" r="6" fill="#f3b9a0" opacity="0.45"/>';
-  s += '<circle cx="70" cy="58" r="6" fill="#f3b9a0" opacity="0.45"/>';
+  s += '<circle cx="30" cy="58" r="7" fill="#f3b9a0" opacity="0.5"/>';
+  s += '<circle cx="70" cy="58" r="7" fill="#f3b9a0" opacity="0.5"/>';
  }
  if (m.eye === 'happy') {
-  s += '<path d="M30 46 Q37 38 44 46" fill="none" stroke="' + ink + '" stroke-width="3.4" stroke-linecap="round"/>';
-  s += '<path d="M56 46 Q63 38 70 46" fill="none" stroke="' + ink + '" stroke-width="3.4" stroke-linecap="round"/>';
+  s += '<path d="M29 47 Q37 36 45 47" fill="none" stroke="' + ink + '" stroke-width="6" stroke-linecap="round"/>';
+  s += '<path d="M55 47 Q63 36 71 47" fill="none" stroke="' + ink + '" stroke-width="6" stroke-linecap="round"/>';
  } else {
-  s += '<circle cx="37" cy="44" r="3.6" fill="' + ink + '"/>';
-  s += '<circle cx="63" cy="44" r="3.6" fill="' + ink + '"/>';
+  s += '<circle cx="37" cy="44" r="6" fill="' + ink + '"/>';
+  s += '<circle cx="63" cy="44" r="6" fill="' + ink + '"/>';
  }
  if (m.brow === 'angry') {
-  s += '<path d="M28 34 L44 41" stroke="' + ink + '" stroke-width="3.2" stroke-linecap="round" fill="none"/>';
-  s += '<path d="M72 34 L56 41" stroke="' + ink + '" stroke-width="3.2" stroke-linecap="round" fill="none"/>';
+  s += '<path d="M27 32 L45 40" stroke="' + ink + '" stroke-width="5.6" stroke-linecap="round" fill="none"/>';
+  s += '<path d="M73 32 L55 40" stroke="' + ink + '" stroke-width="5.6" stroke-linecap="round" fill="none"/>';
  } else if (m.brow === 'worry') {
-  s += '<path d="M28 40 L44 35" stroke="' + ink + '" stroke-width="3.2" stroke-linecap="round" fill="none"/>';
-  s += '<path d="M72 40 L56 35" stroke="' + ink + '" stroke-width="3.2" stroke-linecap="round" fill="none"/>';
+  s += '<path d="M27 40 L45 33" stroke="' + ink + '" stroke-width="5.6" stroke-linecap="round" fill="none"/>';
+  s += '<path d="M73 40 L55 33" stroke="' + ink + '" stroke-width="5.6" stroke-linecap="round" fill="none"/>';
  }
- s += '<path d="' + m.mouth + '" fill="none" stroke="' + ink + '" stroke-width="3.6" stroke-linecap="round"/>';
+ s += '<path d="' + m.mouth + '" fill="none" stroke="' + ink + '" stroke-width="6.4" stroke-linecap="round"/>';
  if (m.tear) {
-  s += '<path d="M63 50 c-3 7 -3 12 0 14 c3 -2 3 -7 0 -14 Z" fill="#9bb6d8"/>';
+  s += '<path d="M63 50 c-4.5 8 -4.5 14 0 16 c4.5 -2 4.5 -8 0 -16 Z" fill="#8fb0d6"/>';
  }
  s += '</svg>';
  return s;
