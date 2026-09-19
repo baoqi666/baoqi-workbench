@@ -39,7 +39,7 @@
   var sentenceCard = '<div class="card daily-deep" id="dailySentence">' +
    '<div class="row" style="gap:10px;align-items:flex-start;margin-bottom:9px">' +
     '<div class="grow"><b style="font-size:var(--fs-3)">今日深度思考 · 玉琢</b></div>' +
-    '<div style="flex:none;font-size:var(--fs-4);color:#b9a07a;white-space:nowrap;margin-top:3px">每日更新</div>' +
+    '<button data-act="edit-sentence" style="flex:none;border:none;background:none;color:#b9a07a;font-weight:700;font-size:var(--fs-4);padding:2px 4px;cursor:pointer">编辑</button>' +
    '</div>' +
    '<div class="deep-quote">' + esc(sText) + '</div>' +
    '</div>';
@@ -48,7 +48,7 @@
   var beautyCard = '<div class="card daily-deep" id="beautyCard">' +
    '<div class="row" style="gap:10px;align-items:flex-start;margin-bottom:10px">' +
     '<div class="grow"><b style="font-size:var(--fs-3)">美商修炼 · 今日</b></div>' +
-    '<div style="flex:none;font-size:var(--fs-4);color:#b9a07a;white-space:nowrap;margin-top:3px">每日更新</div>' +
+    '<button data-act="edit-beauty" style="flex:none;border:none;background:none;color:#b9a07a;font-weight:700;font-size:var(--fs-4);padding:2px 4px;cursor:pointer">编辑</button>' +
    '</div>' +
    '<div style="margin-bottom:9px">' +
     '<div style="font-size:var(--fs-4);color:var(--ink-3);font-weight:700;margin-bottom:3px">方法</div>' +
@@ -89,6 +89,15 @@
   return '<div class="fade-in">' +
    sentenceCard +
    beautyCard +
+   '<div class="card" id="yzRemindCard">' +
+    '<div class="row" style="gap:10px;align-items:center">' +
+     '<div class="grow">' +
+      '<b style="font-size:var(--fs-3)">提醒时间</b>' +
+      '<div class="muted" style="font-size:var(--fs-4);margin-top:2px">自定义七类每日提醒的推送时刻</div>' +
+     '</div>' +
+     '<button data-act="edit-remind" style="flex:none;border:none;background:none;color:#b9a07a;font-weight:700;font-size:var(--fs-4);padding:6px 8px;cursor:pointer">设置</button>' +
+    '</div>' +
+   '</div>' +
    '<div class="card expr-head">' +
     '<div class="row" style="gap:12px">' +
      '<div style="width:46px;height:46px;border-radius:var(--r-m);overflow:hidden;flex:none">' + Icons.cat('express') + '</div>' +
@@ -130,6 +139,118 @@
     refresh();
    };
   });
+  var editMap = { 'edit-sentence': editSentenceSheet, 'edit-beauty': editBeautySheet, 'edit-remind': remindSheet };
+  Object.keys(editMap).forEach(function (act) {
+   var btn = UI.$('[data-act=' + act + ']', root);
+   if (btn) btn.onclick = editMap[act];
+  });
+ }
+
+ /* 写入当天的玉琢内容覆盖（容错初始化 yuzhuo 结构） */
+ function yzDay(td) {
+  Store.state.yuzhuo = Store.state.yuzhuo || { content: {}, remind: {} };
+  Store.state.yuzhuo.content = Store.state.yuzhuo.content || {};
+  return Store.state.yuzhuo.content[td] || (Store.state.yuzhuo.content[td] = {});
+ }
+
+ /* 七类每日提醒（键 / 名称 / 默认小时），顺序即展示顺序 */
+ var REMINDS = [
+  { key: 'changsha', label: '出门地点', def: 8 },
+  { key: 'sentence', label: '今日深度思考', def: 8 },
+  { key: 'health', label: '健康小知识', def: 20 },
+  { key: 'beauty', label: '美商修炼', def: 21 },
+  { key: 'stretchA', label: '睡前拉伸 · 晨', def: 8 },
+  { key: 'stretchB', label: '睡前拉伸 · 夜', def: 11 },
+  { key: 'sleep', label: '睡觉提醒', def: 11 }
+ ];
+
+ /* 编辑「今日深度思考」：正文 + 可选通知引言，保存到 yuzhuo.content[td].sentence */
+ function editSentenceSheet() {
+  var td = Store.today();
+  var s = (Push.current().sentence) || {};
+  UI.sheet(
+   '<h3>编辑今日深度思考</h3>' +
+   '<div class="field"><label>正文</label><textarea id="yzSText" placeholder="写一句今天想对自己说的话">' + esc(s.text || '') + '</textarea></div>' +
+   '<div class="field"><label>通知引言（可选）</label><input type="text" id="yzSBrief" maxlength="40" placeholder="推送通知里的一句话引导" value="' + esc(s.brief || '') + '"/></div>' +
+   '<div class="sheet-actions">' +
+    '<button class="btn-ghost" data-act="cancel">取消</button>' +
+    '<button class="btn-primary" data-act="ok">保存</button>' +
+   '</div>',
+   function (el) {
+    el.querySelector('[data-act=cancel]').onclick = UI.closeSheet;
+    el.querySelector('[data-act=ok]').onclick = function () {
+     var text = el.querySelector('#yzSText').value.trim();
+     if (!text) { UI.toast('请填写正文'); return; }
+     yzDay(td).sentence = { text: text, brief: el.querySelector('#yzSBrief').value.trim() };
+     Store.save(); UI.closeSheet(); refresh(); UI.toast('已更新今日深度思考');
+    };
+   }
+  );
+ }
+
+ /* 编辑「美商修炼」：方法 / 内容 / 知识，保存到 yuzhuo.content[td].beauty */
+ function editBeautySheet() {
+  var td = Store.today();
+  var b = (Push.current().beauty) || {};
+  UI.sheet(
+   '<h3>编辑美商修炼</h3>' +
+   '<div class="field"><label>方法</label><textarea id="yzBMethod" placeholder="今天怎么练">' + esc(b.method || '') + '</textarea></div>' +
+   '<div class="field"><label>内容</label><textarea id="yzBContent" placeholder="今天留意什么">' + esc(b.content || '') + '</textarea></div>' +
+   '<div class="field"><label>知识</label><textarea id="yzBKnowledge" placeholder="今天积累的知识点">' + esc(b.knowledge || '') + '</textarea></div>' +
+   '<div class="sheet-actions">' +
+    '<button class="btn-ghost" data-act="cancel">取消</button>' +
+    '<button class="btn-primary" data-act="ok">保存</button>' +
+   '</div>',
+   function (el) {
+    el.querySelector('[data-act=cancel]').onclick = UI.closeSheet;
+    el.querySelector('[data-act=ok]').onclick = function () {
+     yzDay(td).beauty = {
+      method: el.querySelector('#yzBMethod').value.trim(),
+      content: el.querySelector('#yzBContent').value.trim(),
+      knowledge: el.querySelector('#yzBKnowledge').value.trim()
+     };
+     Store.save(); UI.closeSheet(); refresh(); UI.toast('已更新美商修炼');
+    };
+   }
+  );
+ }
+
+ /* 设置七类提醒时间：保存到 yuzhuo.remind（"HH:MM"），并立即重新排程 */
+ function remindSheet() {
+  var yz = (Store.state.yuzhuo = Store.state.yuzhuo || { content: {}, remind: {} });
+  yz.remind = yz.remind || {};
+  var fields = REMINDS.map(function (r) {
+   var h = Push.remindHour(r.key, r.def);
+   var val = (h.hour < 10 ? '0' : '') + h.hour + ':' + (h.minute < 10 ? '0' : '') + h.minute;
+   return '<div class="field"><label>' + esc(r.label) + '</label>' +
+    '<input type="time" id="yzr_' + r.key + '" value="' + val + '"/></div>';
+  }).join('');
+  UI.sheet(
+   '<h3>提醒时间设置</h3>' +
+   '<p class="muted" style="margin:-6px 0 14px;font-size:var(--fs-4)">修改后重新排程；今天已排的提醒也会按新时刻更新。</p>' +
+   fields +
+   '<div class="sheet-actions">' +
+    '<button class="btn-ghost" data-act="reset">恢复默认</button>' +
+    '<button class="btn-ghost" data-act="cancel">取消</button>' +
+    '<button class="btn-primary" data-act="ok">保存</button>' +
+   '</div>',
+   function (el) {
+    el.querySelector('[data-act=cancel]').onclick = UI.closeSheet;
+    el.querySelector('[data-act=reset]').onclick = function () {
+     yz.remind = {}; Store.save();
+     Push.sync(); UI.closeSheet(); refresh(); UI.toast('已恢复默认提醒时间');
+    };
+    el.querySelector('[data-act=ok]').onclick = function () {
+     REMINDS.forEach(function (r) {
+      var v = el.querySelector('#yzr_' + r.key).value;
+      if (v && /^\d{1,2}:\d{2}$/.test(v)) yz.remind[r.key] = v;
+     });
+     Store.save();
+     Push.sync();
+     UI.closeSheet(); refresh(); UI.toast('提醒时间已更新');
+    };
+   }
+  );
  }
 
  Pages.express = {
