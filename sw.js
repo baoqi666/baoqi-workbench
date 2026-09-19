@@ -1,5 +1,5 @@
 /* 喵の工作台 Service Worker —— 离线缓存应用外壳 */
-const CACHE = 'catdesk-v27';
+const CACHE = 'catdesk-v28';
 const SHELL = [
  './',
  './index.html',
@@ -62,15 +62,15 @@ self.addEventListener('fetch', function (e) {
   return;
  }
 
- // 静态资源：缓存优先，同时后台更新
- e.respondWith(caches.match(req).then(function (hit) {
-  var net = fetch(req).then(function (r) {
-   if (r && r.status === 200) {
-    var copy = r.clone();
-    caches.open(CACHE).then(function (c) { c.put(req, copy); });
-   }
-   return r;
-  }).catch(function () { return hit; });
-  return hit || net;
- }));
+ /* 静态资源：网络优先，离线/失败回退缓存。
+  原来是「缓存优先 + 后台更新」，一旦缓存在 CDN 传播窗口被旧内容污染就永久吐旧版本、
+  必须再跳一个版本号才能救回来（v26 真实踩坑）。网络优先保证在线时永远拿到最新代码，
+  断网时仍有缓存兜底，离线可用不受影响。 */
+ e.respondWith(fetch(req).then(function (r) {
+  if (r && r.status === 200) {
+   var copy = r.clone();
+   caches.open(CACHE).then(function (c) { c.put(req, copy); });
+  }
+  return r;
+ }).catch(function () { return caches.match(req); }));
 });
