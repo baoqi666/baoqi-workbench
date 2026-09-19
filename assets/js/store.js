@@ -77,6 +77,7 @@
    quote: { date: '', idx: 0 },
    budgets: {},
    summaries: [],
+   mood: {},   // 心情记录：{ 'YYYY-MM-DD': 'le' } 喜怒哀乐忧
    seeded: false
   };
  }
@@ -109,6 +110,7 @@
     if (raw.rpg.xp == null) raw.rpg.xp = 0;
     if (raw.birth == null) raw.birth = '';
     if (!raw.wallpaper) raw.wallpaper = { src: '', palette: null };
+    if (!raw.mood || typeof raw.mood !== 'object') raw.mood = {};
     // 迁移：历史已完成的任务（未走过计时器、无 doneCredit）补记预计时长为积分来源
     Object.keys(raw.days || {}).forEach(function (dt) {
      (raw.days[dt].tasks || []).forEach(function (t) {
