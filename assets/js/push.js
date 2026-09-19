@@ -31,6 +31,11 @@
   function p(n) { return (n < 10 ? '0' : '') + n; }
   return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
  }
+ /* 排程标记：日期 + 时刻，保证「改了提醒时间」能重新排程（原仅按日期会漏掉当天未来的改时刻） */
+ function dayKey(d, h, mi) {
+  function p(n) { return (n < 10 ? '0' : '') + n; }
+  return isoDate(d) + '@' + p(h) + ':' + p(mi);
+ }
 
  /* 原生本地通知是否可用（APK 内置插件时存在）。
     远程加载的网页不会 import 插件的 web shim，因此 Plugins.LocalNotifications 默认未注册；
@@ -51,18 +56,36 @@
   return _lnHandle;
  }
 
- /* 当前周期应展示的内容（in-app 永远用这个） */
+ /* 当前周期应展示的内容（in-app 永远用这个）。
+    玉琢：允许用户按日期覆盖「今日深度思考 / 美商修炼」的内容（Store.state.yuzhuo.content[日期]）。 */
  function current() {
   var td = Store.today();
   var C = global.PushContent || { changsha: [], sentences: [], health: [], beauty: [], stretch: [], sleep: [] };
+  var yz = (Store.state && Store.state.yuzhuo && Store.state.yuzhuo.content && Store.state.yuzhuo.content[td]) || {};
+  var sDef = pick(C.sentences, td) || {};
+  var bDef = pick(C.beauty, td) || {};
+  var sentence = yz.sentence ? Object.assign({}, sDef, yz.sentence) : sDef;
+  var beauty = yz.beauty ? Object.assign({}, bDef, yz.beauty) : bDef;
   return {
    changsha: pick(C.changsha, td),   // 每天一个（原每周）
-   sentence: pick(C.sentences, td),
+   sentence: sentence,
    health: pick(C.health, td),
-   beauty: pick(C.beauty, td),
+   beauty: beauty,
    stretch: pick(C.stretch, td),
    sleep: pick(C.sleep, td)
   };
+ }
+
+ /* 每日提醒时间：用户可在玉琢里自定义，未设置则用默认小时。
+   返回 { hour, minute }。remind 键：changsha/sentence/health/beauty/stretchA/stretchB/sleep。 */
+ function remindHour(key, defHour) {
+  var yz = (Store.state && Store.state.yuzhuo && Store.state.yuzhuo.remind) || {};
+  var v = yz[key];
+  if (v && typeof v === 'string' && /^\d{1,2}:\d{2}$/.test(v)) {
+   var p = v.split(':'); var h = +p[0], m = +p[1];
+   if (h >= 0 && h <= 23 && m >= 0 && m <= 59) return { hour: h, minute: m };
+  }
+  return { hour: defHour, minute: 0 };
  }
 
  /* 计算下次触发时间 */
@@ -137,15 +160,14 @@ async function doSchedule(LN, items) {
     var fb = items.map(function (it) {
     var c = JSON.parse(JSON.stringify(it));
     var ty = (it.extra && it.extra.type);
-    if (ty === 'changsha') c.schedule = { on: { hour: 8, minute: 0 } };
+    /* 优先用 extra 里携带的真实时刻（已含用户自定义），否则按类型回退默认 */
+    if (it.extra && it.extra.hour != null) {
+      c.schedule = { on: { hour: it.extra.hour, minute: (it.extra.minute != null ? it.extra.minute : 0) } };
+    }
     else if (ty === 'sentence') c.schedule = { on: { hour: 8, minute: 0 } };
     else if (ty === 'beauty') c.schedule = { on: { hour: 21, minute: 0 } };
-    /* 睡前拉伸 / 睡觉 可能带不同时刻（8 点 / 11 点），用 extra 里的 hour 兜底 */
-    else if (ty === 'stretch' || ty === 'sleep') {
-      var hh = (it.extra && it.extra.hour != null) ? it.extra.hour : 11;
-      var mm = (it.extra && it.extra.minute != null) ? it.extra.minute : 0;
-      c.schedule = { on: { hour: hh, minute: mm } };
-    }
+    else if (ty === 'changsha') c.schedule = { on: { hour: 8, minute: 0 } };
+    else if (ty === 'stretch' || ty === 'sleep') c.schedule = { on: { hour: 11, minute: 0 } };
     /* 待办提醒 / 番茄结束都是一次性的「某个精确时刻」，不做重复降级
        （否则会变成每天 20:00 的错点提醒，比不提醒更糟） */
     else if (ty === 'todo' || ty === 'pomo') return null;
@@ -184,7 +206,8 @@ function withIdle(items) {
   var sched = [];
 
   // 每天 8:00 出门地点（内容按当天日期种子刷新，通知栏弹出）
-  var cf = nextDailyFire(8, 0);
+  var ch = remindHour('changsha', 8);
+  var cf = nextDailyFire(ch.hour, ch.minute);
   var cKey = isoDate(cf);
   if (m.changsha !== cKey) {
    await cancelNative([ID.week]);
@@ -192,13 +215,14 @@ function withIdle(items) {
    sched.push({
     id: ID.week, title: '今日出门去哪儿？',
     body: cp.name + ' · ' + cp.tip,
-    schedule: { at: cf }, extra: { type: 'changsha', hour: 8, minute: 0 }
+    schedule: { at: cf }, extra: { type: 'changsha', hour: ch.hour, minute: ch.minute }
    });
    m.changsha = cKey;
   }
 
   // 每日 8:00 句子（通知只放短引导，全文在玉琢模块）
-  var sf = nextDailyFire(8, 0);
+  var sh = remindHour('sentence', 8);
+  var sf = nextDailyFire(sh.hour, sh.minute);
   var sKey = isoDate(sf);
   if (m.sentence !== sKey) {
    await cancelNative([ID.sentence]);
@@ -206,26 +230,28 @@ function withIdle(items) {
    sched.push({
     id: ID.sentence, title: '今日深度思考 · 自信表达',
     body: sObj.brief || '今天给自己一段安静的思考',
-    schedule: { at: sf }, extra: { type: 'sentence' }
+    schedule: { at: sf }, extra: { type: 'sentence', hour: sh.hour, minute: sh.minute }
    });
    m.sentence = sKey;
   }
 
   // 每日 20:00 健康
-  var hf = nextDailyFire(20, 0);
-  var hKey = isoDate(hf);
+  var hh = remindHour('health', 20);
+  var hf = nextDailyFire(hh.hour, hh.minute);
+  var hKey = dayKey(hf, hh.hour, hh.minute);
   if (m.health !== hKey) {
    await cancelNative([ID.health]);
    sched.push({
     id: ID.health, title: '健康小知识',
     body: pick(C.health, hKey) || '照顾好身体，它是你长期的资产',
-    schedule: { at: hf }, extra: { type: 'health' }
+    schedule: { at: hf }, extra: { type: 'health', hour: hh.hour, minute: hh.minute }
    });
    m.health = hKey;
   }
 
   // 每日 21:00 美商修炼（玉琢模块）
-  var bf = nextDailyFire(21, 0);
+  var bh = remindHour('beauty', 21);
+  var bf = nextDailyFire(bh.hour, bh.minute);
   var bKey = isoDate(bf);
   if (m.beauty !== bKey) {
    await cancelNative([ID.beauty]);
@@ -233,44 +259,47 @@ function withIdle(items) {
    sched.push({
     id: ID.beauty, title: '美商修炼 · 今日',
     body: bObj.brief || '今天提升一点审美眼光',
-    schedule: { at: bf }, extra: { type: 'beauty' }
+    schedule: { at: bf }, extra: { type: 'beauty', hour: bh.hour, minute: bh.minute }
    });
    m.beauty = bKey;
   }
 
   // 睡前拉伸提醒：每天 8:00 与 11:00 各一条（内容按当天刷新）
-  var smf = nextDailyFire(8, 0), smKey = isoDate(smf);
+  var sa = remindHour('stretchA', 8);
+  var smf = nextDailyFire(sa.hour, sa.minute), smKey = isoDate(smf);
   if (m.stretchM !== smKey) {
    await cancelNative([ID.stretchM]);
    var sm = pick(C.stretch, smKey) || {};
    sched.push({
     id: ID.stretchM, title: '睡前拉伸提醒',
     body: sm.brief || '花 5–10 分钟做一组拉伸，放松肩颈和双腿，睡得更香',
-    schedule: { at: smf }, extra: { type: 'stretch', hour: 8, minute: 0 }
+    schedule: { at: smf }, extra: { type: 'stretch', hour: sa.hour, minute: sa.minute }
    });
    m.stretchM = smKey;
   }
-  var snf = nextDailyFire(11, 0), snKey = isoDate(snf);
+  var sb = remindHour('stretchB', 11);
+  var snf = nextDailyFire(sb.hour, sb.minute), snKey = isoDate(snf);
   if (m.stretchN !== snKey) {
    await cancelNative([ID.stretchN]);
    var sn = pick(C.stretch, snKey) || {};
    sched.push({
     id: ID.stretchN, title: '睡前拉伸提醒',
     body: sn.brief || '睡前拉伸一下，身体松了，入睡也更快',
-    schedule: { at: snf }, extra: { type: 'stretch', hour: 11, minute: 0 }
+    schedule: { at: snf }, extra: { type: 'stretch', hour: sb.hour, minute: sb.minute }
    });
    m.stretchN = snKey;
   }
 
   // 睡觉提醒：每天 11:00
-  var slf = nextDailyFire(11, 0), slKey = isoDate(slf);
+  var slh = remindHour('sleep', 11);
+  var slf = nextDailyFire(slh.hour, slh.minute), slKey = dayKey(slf, slh.hour, slh.minute);
   if (m.sleep !== slKey) {
    await cancelNative([ID.sleep]);
    var sl = pick(C.sleep, slKey) || {};
    sched.push({
     id: ID.sleep, title: '睡觉提醒',
     body: sl.brief || '该准备休息了，放下手机，给身体一个完整的睡眠',
-    schedule: { at: slf }, extra: { type: 'sleep', hour: 11, minute: 0 }
+    schedule: { at: slf }, extra: { type: 'sleep', hour: slh.hour, minute: slh.minute }
    });
    m.sleep = slKey;
   }
@@ -427,7 +456,7 @@ function notifyFocusEnd() {
  }
 
 global.Push = {
- current: current, sync: sync, ensurePermission: ensurePermission,
+ current: current, remindHour: remindHour, sync: sync, ensurePermission: ensurePermission,
  nativeAvailable: nativeLN, status: status,
  scheduleTodoReminders: scheduleTodoReminders, cancelTodoReminder: cancelTodoReminder,
  scheduleFocusEnd: scheduleFocusEnd, cancelFocusEnd: cancelFocusEnd, notifyFocusEnd: notifyFocusEnd
