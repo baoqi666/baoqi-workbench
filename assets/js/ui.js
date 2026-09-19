@@ -22,16 +22,27 @@
 
  /* ---------- 底部弹层 ---------- */
  var sheetCloseCb = null;
- function sheet(html, onMount) {
-  var root = $('#modalRoot');
-  sheetCloseCb = null;   // 换了新弹层就清掉上一个的关闭钩子，避免误触发
-  root.innerHTML = '<div class="mask" data-close="1"></div><div class="sheet">' +
-   '<div class="sheet-grip"></div>' + html + '</div>';
-  // 触发过渡
-  requestAnimationFrame(function () { root.classList.add('show'); });
-  root.querySelector('.mask').addEventListener('click', closeSheet);
-  if (onMount) onMount(root.querySelector('.sheet'));
+function sheet(html, onMount, opts) {
+ var root = $('#modalRoot');
+ sheetCloseCb = null;   // 换了新弹层就清掉上一个的关闭钩子，避免误触发
+ /* 含表单字段（输入/多行/下拉）的弹层 = 编辑/添加内容，必须整屏覆盖（修掉手机上被软键盘遮挡、底部按钮看不见的问题）；
+    纯按钮型的确认/预览/挑选弹层仍保持底部卡片样式。 */
+ var full = (opts && opts.full) || /<(input|textarea|select)[\s>]/i.test(html);
+ var cls = full ? 'sheet sheet-full' : 'sheet';
+ root.innerHTML = '<div class="mask" data-close="1"></div><div class="' + cls + '">' +
+  '<div class="sheet-grip"></div>' + html + '</div>';
+ // 触发过渡
+ requestAnimationFrame(function () { root.classList.add('show'); });
+ root.querySelector('.mask').addEventListener('click', closeSheet);
+ if (onMount) onMount(root.querySelector('.sheet'));
+ /* 兜底：上面只按「字面量 html」判断，遇到把表单拼进变量（如 UI.sheet(html,…)）
+    或 onMount 里动态注入的输入框会漏判 —— 直接看实际渲染出的 DOM，含表单就升级整屏，
+    确保手机软键盘弹出时底部保存/取消按钮不被遮挡。 */
+ var sh = root.querySelector('.sheet');
+ if (sh && !sh.classList.contains('sheet-full') && /<(input|textarea|select)[\s>]/i.test(sh.innerHTML)) {
+  sh.className = 'sheet sheet-full';
  }
+}
  /* 注册「本层被关掉时执行一次」的回调（点遮罩 / Esc / 主动 closeSheet 都会触发）。
     用于「用户没填就离开 → 也必须留痕」这类兜底。 */
  function onClose(fn) { sheetCloseCb = fn; }
