@@ -466,6 +466,16 @@ input,textarea,select{outline:none}
 .btn-danger{background:var(--card);color:var(--danger);border:1px solid #ecd6d4}
 .sheet-actions button:active{transform:scale(.97)}
 
+/* 全屏编辑弹层：编辑/添加内容时整屏覆盖，软键盘弹起也不遮挡底部按钮（关键修复） */
+.sheet-full{
+ top:0;bottom:0;left:0;right:0;max-height:100%;height:100%;border-radius:0;
+ padding:calc(14px + var(--safe-t)) 18px calc(14px + var(--safe-b));
+ transform:translateY(100%);display:flex;flex-direction:column;
+}
+.modal-root.show .sheet-full{transform:translateY(0)}
+.sheet-full .sheet-grip{display:none}
+.sheet-full .sheet-actions{position:sticky;bottom:0;background:var(--card);margin-top:auto;padding-top:10px}
+
 /* toast */
 .toast{
  position:absolute;left:50%;bottom:88px;transform:translate(-50%,14px);z-index:120;
