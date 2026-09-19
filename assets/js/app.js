@@ -106,8 +106,52 @@
   el.textContent = '嗨，' + NAMES[n % NAMES.length];
  }
 
+ /* ---------------- 开屏：心情选择（喜怒哀乐忧） ---------------- */
+ var MOODS = { xi: '喜', nu: '怒', ai: '哀', le: '乐', you: '忧' };
+ function paintSplashMood() {
+  var box = $('#splashCat');
+  if (!box) return;
+  var td = Store.today();
+  var mk = Store.state.mood[td];
+  if (mk && MOODS[mk]) {
+   box.innerHTML =
+    '<div class="mood-fixed" data-act="repick" role="button" aria-label="今天心情 ' + MOODS[mk] + '">' +
+     '<span class="mood-big">' + Icons.mood(mk) + '</span>' +
+     '<div class="mood-fixed-label">今天心情 · ' + MOODS[mk] + '</div>' +
+     '<div class="mood-fixed-hint">轻点可换一个</div>' +
+    '</div>';
+   box.querySelector('[data-act=repick]').addEventListener('click', function (e) {
+    e.stopPropagation(); paintSplashMoodPick();
+   });
+  } else {
+   paintSplashMoodPick();
+  }
+ }
+ function paintSplashMoodPick() {
+  var box = $('#splashCat');
+  if (!box) return;
+  var row = Object.keys(MOODS).map(function (k) {
+   return '<button class="mood-btn" type="button" data-mood="' + k + '">' +
+    '<span class="mood-ico">' + Icons.mood(k) + '</span>' +
+    '<span class="mood-lbl">' + MOODS[k] + '</span></button>';
+  }).join('');
+  box.innerHTML = '<div class="mood-pick"><div class="mood-pick-title">今天心情如何？</div>' +
+   '<div class="mood-row">' + row + '</div></div>';
+  UI.$$('.mood-btn', box).forEach(function (b) {
+   b.addEventListener('click', function (e) {
+    e.stopPropagation();
+    var k = b.dataset.mood;
+    var td = Store.today();
+    Store.state.mood[td] = k;
+    Store.save();
+    UI.toast('已记录今天的心情：' + MOODS[k]);
+    paintSplashMood();
+   });
+  });
+ }
+
  function initSplash() {
-  $('#splashCat').innerHTML = Icons.splash();
+  paintSplashMood();
   paintHi();
   paintSplashTime();
   paintQuote(false);
