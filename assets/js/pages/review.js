@@ -5,6 +5,7 @@
 (function (global) {
  var Pages = global.Pages = global.Pages || {};
  var esc = UI.esc;
+ var MOODS = { xi: '喜', nu: '怒', ai: '哀', le: '乐', you: '忧' };
 
  // 八维周复盘模板
  var FIELDS = [
@@ -218,9 +219,12 @@
    if (!ds) return '<div class="cal-cell empty"></div>';
    var isToday = ds === today;
    var has = hasContent(ds);
+   var mood = Store.state.mood[ds];
    var num = +ds.slice(8, 10);
    return '<div class="cal-cell' + (isToday ? ' today' : '') + (has ? ' has' : '') + '" data-date="' + ds + '">' +
-    '<span class="cal-d">' + num + '</span>' + (has ? '<i class="cal-dot"></i>' : '') + '</div>';
+    '<span class="cal-d">' + num + '</span>' +
+    (mood ? '<span class="cal-mood" title="心情 · ' + (MOODS[mood] || '') + '">' + Icons.mood(mood) + '</span>' : '') +
+    (has ? '<i class="cal-dot"></i>' : '') + '</div>';
   }).join('');
   return '<div class="fade-in">' +
    tabs('calendar') +
