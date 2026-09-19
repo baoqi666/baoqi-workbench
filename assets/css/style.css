@@ -638,7 +638,7 @@ input,textarea,select{outline:none}
 .cal-cell.has{background:var(--brand-soft);border-color:transparent}
 .cal-dot{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);width:5px;height:5px;border-radius:50%;background:var(--brand)}
 .cal-cell.today .cal-dot{background:#fff}
-.cal-mood{position:absolute;bottom:4px;right:4px;width:19px;height:19px;display:block}
+.cal-mood{position:absolute;bottom:3px;right:3px;width:24px;height:24px;display:block;border-radius:50%;box-shadow:0 0 0 1.5px var(--card)}
 .cal-mood svg{width:100%;height:100%;display:block}
 
 /* 待办（含时间） */
