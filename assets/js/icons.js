@@ -85,7 +85,54 @@
    '</svg>';
  }
 
- /** 连续打卡插画：暖色火苗（替代猫咪） */
+ /* 心情表情：喜怒哀乐忧 5 种（极简线条脸谱，低饱和暖底色，呼应画布） */
+var MOOD_TINT = {
+ xi:  '#fbe7d3', nu: '#f6d3cb', ai: '#dde4ee', le: '#fce7c4', you: '#e9e4d2'
+};
+var MOOD_INK = {
+ xi:  '#9a6a44', nu: '#9a4f44', ai: '#5d6b80', le: '#9a6a44', you: '#6b6550'
+};
+function mood(key, opt) {
+ opt = opt || {};
+ var M = {
+  xi:  { eye: 'dot',   mouth: 'M37 66 Q50 76 63 66', brow: '',      cheek: true,  tear: false },
+  le:  { eye: 'happy', mouth: 'M34 64 Q50 86 66 64', brow: '',      cheek: true,  tear: false },
+  nu:  { eye: 'dot',   mouth: 'M36 72 Q50 60 64 72', brow: 'angry', cheek: false, tear: false },
+  ai:  { eye: 'dot',   mouth: 'M37 70 Q50 60 63 70', brow: '',      cheek: false, tear: true  },
+  you: { eye: 'dot',   mouth: 'M37 64 Q44 60 50 64 Q56 68 63 64', brow: 'worry', cheek: false, tear: false }
+ };
+ var m = M[key] || M.xi;
+ var ink = MOOD_INK[key] || MOOD_INK.xi;
+ var tint = MOOD_TINT[key] || MOOD_TINT.xi;
+ var s = '<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true" style="color:' + ink + '">';
+ s += '<circle cx="50" cy="50" r="46" fill="' + tint + '"/>';
+ if (m.cheek) {
+  s += '<circle cx="30" cy="58" r="6" fill="#f3b9a0" opacity="0.45"/>';
+  s += '<circle cx="70" cy="58" r="6" fill="#f3b9a0" opacity="0.45"/>';
+ }
+ if (m.eye === 'happy') {
+  s += '<path d="M30 46 Q37 38 44 46" fill="none" stroke="' + ink + '" stroke-width="3.4" stroke-linecap="round"/>';
+  s += '<path d="M56 46 Q63 38 70 46" fill="none" stroke="' + ink + '" stroke-width="3.4" stroke-linecap="round"/>';
+ } else {
+  s += '<circle cx="37" cy="44" r="3.6" fill="' + ink + '"/>';
+  s += '<circle cx="63" cy="44" r="3.6" fill="' + ink + '"/>';
+ }
+ if (m.brow === 'angry') {
+  s += '<path d="M28 34 L44 41" stroke="' + ink + '" stroke-width="3.2" stroke-linecap="round" fill="none"/>';
+  s += '<path d="M72 34 L56 41" stroke="' + ink + '" stroke-width="3.2" stroke-linecap="round" fill="none"/>';
+ } else if (m.brow === 'worry') {
+  s += '<path d="M28 40 L44 35" stroke="' + ink + '" stroke-width="3.2" stroke-linecap="round" fill="none"/>';
+  s += '<path d="M72 40 L56 35" stroke="' + ink + '" stroke-width="3.2" stroke-linecap="round" fill="none"/>';
+ }
+ s += '<path d="' + m.mouth + '" fill="none" stroke="' + ink + '" stroke-width="3.6" stroke-linecap="round"/>';
+ if (m.tear) {
+  s += '<path d="M63 50 c-3 7 -3 12 0 14 c3 -2 3 -7 0 -14 Z" fill="#9bb6d8"/>';
+ }
+ s += '</svg>';
+ return s;
+}
+
+/** 连续打卡插画：暖色火苗（替代猫咪） */
  function streakArt(opt) {
   opt = opt || {};
   return '' +
@@ -106,5 +153,5 @@
    '</g></svg>';
  }
 
- global.Icons = { cat: cat, splash: splash, streakArt: streakArt, emptyArt: emptyArt, palette: PALETTE };
+ global.Icons = { cat: cat, splash: splash, streakArt: streakArt, emptyArt: emptyArt, mood: mood, palette: PALETTE };
 })(window);
