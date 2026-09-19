@@ -1,5 +1,5 @@
 /* 喵の工作台 Service Worker —— 离线缓存应用外壳 */
-const CACHE = 'catdesk-v26';
+const CACHE = 'catdesk-v27';
 const SHELL = [
  './',
  './index.html',
@@ -27,8 +27,16 @@ const SHELL = [
  './assets/icons/icon-maskable.svg'
 ];
 
+/* 关键：安装时逐个 Request 用 cache:'reload' 绕过 HTTP 缓存与 CDN 中间缓存。
+  用默认的 c.addAll(SHELL) 会吃到 GitHub Pages 的旧副本（CDN 传播有 ~30-60s 延迟），
+  一旦旧内容被装进新版本缓存，后续缓存优先策略会让用户永远看不到更新。
+  逐项 .catch 也避免单个资源 404 导致整个安装失败（原 addAll 是原子的）。 */
 self.addEventListener('install', function (e) {
- e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () {
+ e.waitUntil(caches.open(CACHE).then(function (c) {
+  return Promise.all(SHELL.map(function (u) {
+   return c.add(new Request(u, { cache: 'reload' })).catch(function () { return null; });
+  }));
+ }).then(function () {
   return self.skipWaiting();
  }));
 });
