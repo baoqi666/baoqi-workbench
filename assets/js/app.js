@@ -59,7 +59,7 @@
   var tEl = $('#placeText'), tipEl = $('#placeTip');
   if (!tEl) return;
   var c = (global.Push && Push.current) ? Push.current() : {};
-  if (c.week) { tEl.textContent = c.week.name; if (tipEl) tipEl.textContent = c.week.tip; }
+  if (c.changsha) { tEl.textContent = c.changsha.name; if (tipEl) tipEl.textContent = c.changsha.tip; }
   else { tEl.textContent = '出去走走'; if (tipEl) tipEl.textContent = '换换心情'; }
  }
 
