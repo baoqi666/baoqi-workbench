@@ -68,6 +68,7 @@
    funds: [],
    reviews: [],
    express: {},
+   yuzhuo: { content: {}, remind: {} },   // 玉琢：每日内容覆盖（按日期）+ 每日提醒时间自定义
    rewards: [],
    redeemLog: [],
    redeemed: 0,
@@ -95,6 +96,9 @@
     if (!raw.stats.output) raw.stats.output = { min: 0, count: 0 };
     if (!raw.funds) raw.funds = [];
     if (!raw.express) raw.express = {};
+    if (!raw.yuzhuo || typeof raw.yuzhuo !== 'object') raw.yuzhuo = { content: {}, remind: {} };
+    if (!raw.yuzhuo.content) raw.yuzhuo.content = {};
+    if (!raw.yuzhuo.remind) raw.yuzhuo.remind = {};
     if (!raw.rewards) raw.rewards = [];
     if (!raw.redeemLog) raw.redeemLog = [];
     if (raw.redeemed == null) raw.redeemed = 0;
