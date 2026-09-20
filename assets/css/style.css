@@ -553,6 +553,27 @@ input,textarea,select{outline:none}
 .kcal-ring{display:flex;align-items:center;gap:14px}
 .kcal-ring svg{width:96px;height:96px;flex:none}
 
+/* 饮食：卡路里自动联想 + 超标提示 */
+.food-hints{display:flex;flex-wrap:wrap;gap:7px;margin:-4px 0 6px}
+.food-hint{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:var(--r-m);
+ background:var(--card-2);border:1px solid var(--line);font-size:var(--fs-4)}
+.food-hint .fh-name{font-weight:700;color:var(--ink)}
+.food-hint .fh-k{color:var(--ink-3)}
+.food-hint:active{transform:scale(.96);border-color:var(--brand)}
+.kcal-preview{margin:-2px 0 12px;font-size:var(--fs-4)}
+.kp-row{display:flex;align-items:center;gap:8px;padding:8px 11px;border-radius:var(--r-m);background:var(--brand-soft)}
+.kp-row.over{background:#fbeae8}
+.kp-dot{width:8px;height:8px;border-radius:50%;background:var(--ok);flex:none}
+.kp-row.over .kp-dot{background:var(--danger)}
+.kp-row b{font-weight:800;color:var(--ink)}
+.kp-ok{color:#3f7a5c}
+.kp-flag{color:var(--danger);font-weight:700}
+.kp-hint{color:var(--ink-3);line-height:1.6}
+.meal-kcal{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex:none}
+.meal-flag{padding:1px 7px;border-radius:var(--r-s);font-size:var(--fs-4);font-weight:800;
+ background:#fbeae8;color:var(--danger);border:1px solid #ecd6d4}
+.kcal-over{color:var(--danger);font-weight:800}
+
 /* 运动 */
 .fit-item{
  display:flex;align-items:center;gap:11px;padding:12px;border-radius:var(--r-m);
