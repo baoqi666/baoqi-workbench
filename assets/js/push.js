@@ -152,6 +152,18 @@ async function ensureChannel(ln) {
   } catch (e) {}
  }
 
+ /* 查询系统里真正还挂着的本地通知 id 集合；查不到返回 null（插件不支持或被拦）。 */
+ async function pendingIds(LN) {
+  if (!LN || typeof LN.getPending !== 'function') return null;
+  try {
+   var r = await LN.getPending();
+   var arr = (r && r.notifications) || [];
+   var set = {};
+   arr.forEach(function (n) { set[+n.id] = true; });
+   return set;
+  } catch (e) { return null; }
+ }
+
 /* 精确排程，失败降级为重复提醒 */
 async function doSchedule(LN, items) {
  try {
@@ -205,11 +217,25 @@ function withIdle(items) {
   var m = markers();
   var sched = [];
 
+  /* ★ 自愈：localStorage 里的排程标记在杀后台、重启后都还在，
+     但系统闹钟（AlarmManager）可能被清掉 —— Android 重启会清空 alarm，
+     国产 ROM 的电池优化/自启动管控也会清。原来只看标记，标记说「今天排过了」
+     就直接跳过，于是闹钟没了却永远补不回来，表现就是「重启或清后台后
+     一条提醒都收不到，只能干等到第二天日期变了才恢复」。
+     现在先看系统里真正还挂着的通知（getPending），缺失就补排；
+     若无法核实（插件不支持）则每次打开都无条件补排 —— 同 id 覆盖、幂等，不会重复弹。 */
+  var pending = await pendingIds(LN);
+  function need(mark, key, id) {
+   if (mark !== key) return true;      // 日期变了 / 用户改了提醒时刻 → 必须重排
+   if (pending === null) return true;  // 无法核实系统状态 → 无条件补排（覆盖式，幂等）
+   return !pending[id];                // 能核实 → 只补系统里确实已经没有的
+  }
+
   // 每天 8:00 出门地点（内容按当天日期种子刷新，通知栏弹出）
   var ch = remindHour('changsha', 8);
   var cf = nextDailyFire(ch.hour, ch.minute);
   var cKey = isoDate(cf);
-  if (m.changsha !== cKey) {
+  if (need(m.changsha, cKey, ID.week)) {
    await cancelNative([ID.week]);
    var cp = pick(C.changsha, cKey) || { name: '出去走走', tip: '换换心情' };
    sched.push({
@@ -224,7 +250,7 @@ function withIdle(items) {
   var sh = remindHour('sentence', 8);
   var sf = nextDailyFire(sh.hour, sh.minute);
   var sKey = isoDate(sf);
-  if (m.sentence !== sKey) {
+  if (need(m.sentence, sKey, ID.sentence)) {
    await cancelNative([ID.sentence]);
    var sObj = pick(C.sentences, sKey) || {};
    sched.push({
@@ -239,7 +265,7 @@ function withIdle(items) {
   var hh = remindHour('health', 20);
   var hf = nextDailyFire(hh.hour, hh.minute);
   var hKey = dayKey(hf, hh.hour, hh.minute);
-  if (m.health !== hKey) {
+  if (need(m.health, hKey, ID.health)) {
    await cancelNative([ID.health]);
    sched.push({
     id: ID.health, title: '健康小知识',
@@ -253,7 +279,7 @@ function withIdle(items) {
   var bh = remindHour('beauty', 21);
   var bf = nextDailyFire(bh.hour, bh.minute);
   var bKey = isoDate(bf);
-  if (m.beauty !== bKey) {
+  if (need(m.beauty, bKey, ID.beauty)) {
    await cancelNative([ID.beauty]);
    var bObj = pick(C.beauty, bKey) || {};
    sched.push({
@@ -267,7 +293,7 @@ function withIdle(items) {
   // 睡前拉伸提醒：每天 8:00 与 11:00 各一条（内容按当天刷新）
   var sa = remindHour('stretchA', 8);
   var smf = nextDailyFire(sa.hour, sa.minute), smKey = isoDate(smf);
-  if (m.stretchM !== smKey) {
+  if (need(m.stretchM, smKey, ID.stretchM)) {
    await cancelNative([ID.stretchM]);
    var sm = pick(C.stretch, smKey) || {};
    sched.push({
@@ -279,7 +305,7 @@ function withIdle(items) {
   }
   var sb = remindHour('stretchB', 11);
   var snf = nextDailyFire(sb.hour, sb.minute), snKey = isoDate(snf);
-  if (m.stretchN !== snKey) {
+  if (need(m.stretchN, snKey, ID.stretchN)) {
    await cancelNative([ID.stretchN]);
    var sn = pick(C.stretch, snKey) || {};
    sched.push({
@@ -293,7 +319,7 @@ function withIdle(items) {
   // 睡觉提醒：每天 11:00
   var slh = remindHour('sleep', 11);
   var slf = nextDailyFire(slh.hour, slh.minute), slKey = dayKey(slf, slh.hour, slh.minute);
-  if (m.sleep !== slKey) {
+  if (need(m.sleep, slKey, ID.sleep)) {
    await cancelNative([ID.sleep]);
    var sl = pick(C.sleep, slKey) || {};
    sched.push({
