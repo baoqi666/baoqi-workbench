@@ -126,9 +126,9 @@
  function mealSheet() {
   UI.sheet(
    '<h3>记录一餐</h3>' +
-   '<div class="field"><label>名称</label><input type="text" id="mName" placeholder="例如：红烧肉 / 米饭 / 奶茶" maxlength="30"/></div>' +
+   '<div class="field"><label>名称（可一次写多道，用「加 / 、 / 空格」隔开）</label><input type="text" id="mName" placeholder="例如：醋溜荷包蛋加米线加米饭" maxlength="60"/></div>' +
    '<div id="foodHints" class="food-hints"></div>' +
-   '<div class="field"><label>卡路里（kcal）</label><input type="number" id="mKcal" min="0" max="5000" step="10" placeholder="输入或点上方自动填入"/></div>' +
+   '<div class="field"><label>卡路里（kcal，多道已自动相加）</label><input type="number" id="mKcal" min="0" max="5000" step="10" placeholder="自动计算，也可手动改"/></div>' +
    '<div id="kcalPreview" class="kcal-preview"></div>' +
    '<div class="field"><label>快捷选择</label><div class="chips">' +
     ['早餐', '午餐', '晚餐', '加餐', '饮品'].map(function (t) { return '<button class="chip" data-quick="' + t + '">' + t + '</button>'; }).join('') +
@@ -140,6 +140,14 @@
     var kcalEl = el.querySelector('#mKcal');
     var hintsEl = el.querySelector('#foodHints');
     var prevEl = el.querySelector('#kcalPreview');
+    var kcalEdited = false;
+
+    function stripPrefixLocal(q) {
+     return (q || '').replace(/^(早饭|早餐|早|午饭|午餐|午|晚饭|晚餐|晚|加餐|加|下午茶|饮品|夜宵|夜)[ ·•・]*/, '');
+    }
+    function splitDishes(s) {
+     return stripPrefixLocal(s).split(/[＋+加和以及与、，,·／/\s]+/).map(function (x) { return x.trim(); }).filter(function (x) { return x; });
+    }
 
     function renderHints() {
      var q = nameEl.value.trim();
@@ -151,30 +159,56 @@
        '<span class="fh-k">≈ ' + m.k + ' kcal/' + esc(m.u || '份') + '</span></button>';
      }).join('');
      UI.$$('.food-hint', hintsEl).forEach(function (b) {
-      b.onclick = function () { kcalEl.value = b.dataset.k; renderPreview(); };
+      b.onclick = function () { kcalEl.value = b.dataset.k; kcalEdited = true; renderPreview(); };
      });
     }
     function renderPreview() {
      var k = +kcalEl.value || 0;
-     var q = nameEl.value.trim();
-     var best = (global.FoodDB && FoodDB.search) ? (FoodDB.search(q)[0] || null) : null;
      var html = '';
      if (k > 0) {
       var over = k > ITEM_KCAL_WARN;
       html += '<div class="kp-row' + (over ? ' over' : '') + '">' +
        '<span class="kp-dot"></span><b>' + k + ' kcal</b>' +
-       (over ? '<span class="kp-flag">单品超标 · 建议拆分或减量</span>'
-             : '<span class="kp-ok">单品热量适中</span>') + '</div>';
-     } else if (best && best.score >= 80) {
-      html += '<div class="kp-hint">自动估算：' + esc(best.name) + ' ≈ ' + best.k + ' kcal/' + esc(best.u || '份') + '，点上方填入</div>';
+       (over ? '<span class="kp-flag">超标 · 建议拆分或减量</span>'
+             : '<span class="kp-ok">热量适中</span>') + '</div>';
      }
      prevEl.innerHTML = html;
     }
-    nameEl.addEventListener('input', function () { renderHints(); renderPreview(); });
-    kcalEl.addEventListener('input', renderPreview);
+    function analyze() {
+     var raw = nameEl.value.trim();
+     if (!raw) { hintsEl.innerHTML = ''; prevEl.innerHTML = ''; if (!kcalEdited) kcalEl.value = ''; return; }
+     var dishes = splitDishes(raw);
+     if (dishes.length > 1) {
+      var pairs = [], total = 0;
+      dishes.forEach(function (d) {
+       var b = (global.FoodDB && FoodDB.best) ? FoodDB.best(d) : null;
+       if (b) {
+        total += b.k;
+        pairs.push('<span class="fh-pair"><span class="fh-name">' + esc(b.name) + '</span><span class="fh-k">' + b.k + '</span></span>');
+       } else {
+        pairs.push('<span class="fh-pair fh-unmatched"><span class="fh-name">' + esc(d) + '</span><span class="fh-k">?</span></span>');
+       }
+      });
+      hintsEl.innerHTML = '<div class="food-breakdown">' + pairs.join('<span class="fh-plus">＋</span>') +
+       '<span class="fh-eq">＝ ' + total + ' kcal</span></div>';
+      if (!kcalEdited) kcalEl.value = total || '';
+      var over = total > ITEM_KCAL_WARN;
+      prevEl.innerHTML = '<div class="kp-row' + (over ? ' over' : '') + '">' +
+       '<span class="kp-dot"></span><b>本餐合计 ' + total + ' kcal</b>' +
+       (over ? '<span class="kp-flag">超标 · 建议拆分或减量</span>' : '<span class="kp-ok">热量适中</span>') + '</div>';
+     } else {
+      var q = raw;
+      var best = (global.FoodDB && FoodDB.search) ? (FoodDB.search(q)[0] || null) : null;
+      renderHints();
+      if (best && best.score >= 85 && !kcalEdited) kcalEl.value = best.k;
+      renderPreview();
+     }
+    }
+    nameEl.addEventListener('input', analyze);
+    kcalEl.addEventListener('input', function () { kcalEdited = true; renderPreview(); });
 
     UI.$$('[data-quick]', el).forEach(function (b) {
-     b.onclick = function () { nameEl.value = b.dataset.quick + ' · '; nameEl.focus(); renderHints(); renderPreview(); };
+     b.onclick = function () { nameEl.value = b.dataset.quick + ' · '; nameEl.focus(); analyze(); };
     });
     el.querySelector('[data-act=cancel]').onclick = UI.closeSheet;
     el.querySelector('[data-act=ok]').onclick = function () {
@@ -187,7 +221,7 @@
      Store.save(); UI.closeSheet(); refresh();
      var goal = Store.state.profile.kcalGoal || 1800;
      var total = (h.meals || []).reduce(function (a, m) { return a + (+m.kcal || 0); }, 0);
-     if (k > ITEM_KCAL_WARN) UI.toast('单品超标 ' + k + ' kcal');
+     if (k > ITEM_KCAL_WARN) UI.toast('本餐超标 ' + k + ' kcal');
      else if (total > goal) UI.toast('今日已超预算 ' + (total - goal) + ' kcal');
      else UI.toast('已记录 ' + k + ' kcal · 剩余 ' + (goal - total) + ' kcal');
     };
