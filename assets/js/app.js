@@ -608,23 +608,15 @@ function sessionSheet(info) {
 
   // 数据备份：导出 / 导入（防丢兜底）
   $('#exportBtn').onclick = function () { openExportSheet('json'); };
-  $('#importBtn').onclick = function () {
-   closeDrawer();
-   setTimeout(function () { $('#importFile').click(); }, 240);
-  };
+  $('#importBtn').onclick = function () { openImportSheet(); };
   $('#importFile').onchange = function () {
    var f = this.files && this.files[0];
    if (!f) return;
    var reader = new FileReader();
    var self = this;
    reader.onload = function () {
-    try {
-     var obj = JSON.parse(reader.result);
-     UI.confirm('导入备份文件？', '将用备份覆盖当前全部数据，且无法撤销。建议先导出当前数据再导入。', function () {
-      if (Store.importAll(obj)) { UI.toast('备份已恢复'); location.reload(); }
-      else UI.toast('备份文件格式不正确');
-     }, '确认导入');
-    } catch (e) { UI.toast('备份文件无法解析'); }
+    try { applyImport(JSON.parse(reader.result)); }
+    catch (e) { UI.toast('备份文件无法解析'); }
     self.value = '';
    };
    reader.readAsText(f);
@@ -672,7 +664,38 @@ function sessionSheet(info) {
   if (h) h.textContent = '当前环境不支持系统分享，请点「复制全部」后粘贴到备忘录 / 微信 / 云盘保存。';
  }
 
- // 导出面板：直接展示内容 + 复制 + 系统分享保存（解决 WebView 下载文件找不到的问题）
+ // 导入：校验 + 应用（文件 / 粘贴共用）
+ function isValidBackup(obj) {
+  if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return false;
+  return ('v' in obj) || ('days' in obj) || ('health' in obj) || ('profile' in obj);
+ }
+ function applyImport(obj) {
+  if (!isValidBackup(obj)) { UI.toast('备份格式不正确'); return; }
+  UI.confirm('导入备份？', '将用备份覆盖当前全部数据，无法撤销。建议先导出当前数据再导入。', function () {
+   if (Store.importAll(obj)) { UI.toast('备份已恢复'); location.reload(); }
+   else UI.toast('备份格式不正确');
+  }, '确认导入');
+ }
+ // 导入面板：文件 / 粘贴文本两种方式，解决换手机时文件找不到、下载不到存储的问题
+ function openImportSheet() {
+  closeDrawer();
+  var html = ''
+   + '<div class="sheet-head"><div class="sheet-title">导入备份</div>'
+   + '<div class="sheet-sub">恢复本应用导出的 JSON 备份。换手机最稳：旧手机「导出 → 复制全部」，新手机这里「粘贴并导入」。</div></div>'
+   + '<div class="field"><label>方式一：选择备份文件</label><button class="btn ghost" id="pickFile" type="button">选择文件…</button></div>'
+   + '<div class="field"><label>方式二：粘贴备份文本</label><textarea class="export-area" id="pasteArea" placeholder="把旧手机「导出 → 复制全部」得到的 JSON 文本粘贴到这里"></textarea></div>'
+   + '<div class="sheet-actions"><button class="btn primary" id="doPaste" type="button">粘贴并导入</button></div>'
+   + '<div class="sheet-hint" id="impHint"></div>';
+  UI.sheet(html, function (el) {
+   el.querySelector('#pickFile').onclick = function () { try { $('#importFile').click(); } catch (e) { UI.toast('无法打开文件选择'); } };
+   el.querySelector('#doPaste').onclick = function () {
+    var txt = (el.querySelector('#pasteArea').value || '').trim();
+    if (!txt) { UI.toast('请先粘贴备份文本'); return; }
+    try { applyImport(JSON.parse(txt)); } catch (e) { UI.toast('文本不是有效 JSON'); }
+   };
+  });
+ }
+ // 导出面板：内容展示 + 复制 + 系统分享保存（解决 WebView 下载文件找不到的问题）
  function openExportSheet(type) {
   var isJson = type === 'json';
   var title = isJson ? '数据备份（JSON）' : '数据导出（文本）';
@@ -682,26 +705,27 @@ function sessionSheet(info) {
   closeDrawer();
   var html = ''
    + '<div class="sheet-head"><div class="sheet-title">' + title + '</div>'
-   + '<div class="sheet-sub">已生成备份，可下载文件 / 复制 / 系统分享，建议存到云盘</div></div>'
+   + '<div class="sheet-sub">已生成备份。推荐用「保存 / 分享」存到云盘或微信；换手机后用「粘贴备份」导入最稳。</div></div>'
    + '<textarea class="export-area" id="exportArea" readonly>' + escapeHtml(content) + '</textarea>'
    + '<div class="sheet-actions">'
-   +  '<button class="btn primary" id="downloadBtn"> 下载文件</button>'
+   +  '<button class="btn primary" id="shareBtn"> 保存 / 分享</button>'
    +  '<button class="btn ghost" id="copyBtn"> 复制全部</button>'
-   +  '<button class="btn ghost" id="shareBtn"> 保存 / 分享</button>'
+   +  '<button class="btn ghost" id="downloadBtn"> 下载文件</button>'
    + '</div>'
    + '<div class="sheet-hint" id="shareHint"></div>';
   UI.sheet(html, function (el) {
    var area = el.querySelector('#exportArea');
-   el.querySelector('#downloadBtn').onclick = function () {
+   el.querySelector('#shareBtn').onclick = function () {
     try {
      var blob = new Blob([content], { type: mime + ';charset=utf-8' });
-     var url = URL.createObjectURL(blob);
-     var a = document.createElement('a');
-     a.href = url; a.download = filename;
-     document.body.appendChild(a); a.click();
-     document.body.removeChild(a);
-     setTimeout(function () { try { URL.revokeObjectURL(url); } catch (e) {} }, 2000);
-     UI.toast('文件已下载：' + filename + '（请存到云盘保底）');
+     var file = new File([blob], filename, { type: mime });
+     if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      navigator.share({ files: [file], title: '喵の工作台' + (isJson ? ' 备份' : ' 导出') })
+       .then(function () { UI.toast('已通过系统分享保存'); })
+       .catch(function () {});
+     } else if (navigator.share) {
+      navigator.share({ title: '喵の工作台', text: content }).catch(function () {});
+     } else { shareFallback(el); }
     } catch (e) { shareFallback(el); }
    };
    el.querySelector('#copyBtn').onclick = function () {
@@ -713,18 +737,17 @@ function sessionSheet(info) {
      });
     } else { try { document.execCommand('copy'); done(); } catch (e) { shareFallback(el); } }
    };
-   el.querySelector('#shareBtn').onclick = function () {
-    var blob = new Blob([content], { type: mime + ';charset=utf-8' });
-    var file = new File([blob], filename, { type: mime });
-    if (navigator.canShare && navigator.canShare({ files: [file] })) {
-     navigator.share({ files: [file], title: '喵の工作台' + (isJson ? ' 备份' : ' 导出') })
-      .then(function () { UI.toast('已通过系统分享保存'); })
-      .catch(function () {});
-    } else if (navigator.share) {
-     navigator.share({ title: '喵の工作台', text: content }).catch(function () {});
-    } else {
-     shareFallback(el);
-    }
+   el.querySelector('#downloadBtn').onclick = function () {
+    try {
+     var blob = new Blob([content], { type: mime + ';charset=utf-8' });
+     var url = URL.createObjectURL(blob);
+     var a = document.createElement('a');
+     a.href = url; a.download = filename;
+     document.body.appendChild(a); a.click();
+     document.body.removeChild(a);
+     setTimeout(function () { try { URL.revokeObjectURL(url); } catch (e) {} }, 2000);
+     UI.toast('已尝试下载；若找不到文件，请用「保存 / 分享」或「复制全部」');
+    } catch (e) { shareFallback(el); }
    };
   });
  }
