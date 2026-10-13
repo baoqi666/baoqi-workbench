@@ -1055,3 +1055,46 @@ input,textarea,select{outline:none}
 .points-card.mini .pc-go{margin-top:auto;align-self:flex-start}
 /* 统计格不再三等分：首列 1.45 份，5 张卡排成「3 + 2」，行内宽窄不同 */
 .stat-grid.compact{grid-template-columns:1.45fr 1fr 1fr}
+
+/* ==========================================================
+  操作型页面（每日计划 / 玉琢 / 灵感 / 奖励 / 心愿）
+  进这些页是为了干活，不是为了看数据 —— 所以：
+  ① 白框稀缺：列表行一律去框，裸在纸面上（一排小方块是「规矩、无聊」最大的来源）
+  ② 只有一个执行重心 .pg-hero，其它一律矮下去
+  ③ 组内 10、组间 24（sec-title 就是新一组的起点）
+  ========================================================== */
+.pg-operate .card{margin-bottom:10px}
+.pg-operate .sec-title{margin-top:24px;margin-bottom:10px}
+.pg-operate > .sec-title:first-child{margin-top:0}
+/* 列表行去框：背景、描边、投影、磨砂全撤，只留一条极淡的分隔线 */
+.pg-operate .task-item,
+.pg-operate .step-item,
+.pg-operate .idea-item,
+.pg-operate .reward-row,
+.pg-operate .fund-card{
+ background:transparent;border:none;box-shadow:none;border-radius:0;margin-bottom:0;
+ padding:13px 2px;border-bottom:1px solid var(--line-2);
+ -webkit-backdrop-filter:none;backdrop-filter:none;
+}
+.pg-operate .task-item:last-child,
+.pg-operate .step-item:last-child,
+.pg-operate .idea-item:last-child,
+.pg-operate .reward-row:last-child,
+.pg-operate .fund-card:last-child{border-bottom:none}
+/* 逾期任务的色条：去掉四边框后仍用 inset 阴影画，不退回成左侧台阶 */
+.pg-operate .task-item.overdue{border-left:none;box-shadow:inset 3px 0 0 var(--warn)}
+/* 本页主角：更高更舒展，数字放大 */
+.pg-operate .pg-hero{padding:22px 20px}
+.pg-operate .pg-hero .rr-points b,
+.pg-operate .pg-hero .dream-overall b,
+.pg-operate .pg-hero .expr-prog{font-size:var(--fs-display);line-height:1.05}
+/* 状态条 / 配置条：不该占一整张卡片 */
+.pg-operate .pg-bar,
+.pg-operate .pg-list{
+ background:transparent;border:none;box-shadow:none;padding:2px;
+ -webkit-backdrop-filter:none;backdrop-filter:none;
+}
+/* 每日计划：精力条降级成矮条，把主角让给计时器（它是「看」的信息，不该和执行并列） */
+.pg-operate .energy-head{padding:14px 16px}
+.pg-operate .energy-head .eh-left .n{font-size:var(--fs-1)}
+.pg-operate .timer-card{padding:24px 20px;margin-top:14px}
