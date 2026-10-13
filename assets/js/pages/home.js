@@ -147,11 +147,28 @@
    '</div>';
  }
 
+/* C 级：首屏结论条 —— 打开就知道今天该干什么，不用自己看数据推导 */
+function focusLine() {
+ var td = Store.today();
+ var tasks = Store.day(td).tasks || [];
+ var undone = tasks.filter(function (t) { return !t.done; });
+ var e = Store.energyOf(td);
+ var txt;
+ if (!tasks.length) txt = '今天还没有安排 · 去「每日计划」添加';
+ else if (!undone.length) txt = '今天 ' + tasks.length + ' 件事 · 全部做完了';
+ else txt = '今天 ' + tasks.length + ' 件事 · 下一件：' + esc(undone[0].title);
+ return '' +
+  '<div class="focus-line" id="focusLine">' +
+   '<span class="fl-text">' + txt + '</span>' +
+   '<span class="fl-energy">精力 ' + e.left + '</span>' +
+  '</div>';
+}
+
 function render() {
  return '<div class="fade-in">' +
-   pointsCard() +
+   focusLine() +
    streakCard() +
-   '<div class="stat-grid">' +
+   '<div class="stat-grid compact">' +
     statCard('english', '英语听力训练', '听力完成') +
     statCard('knowledge', '高质量知识学习', '学习') +
     statCard('account', '个人账号更新', '更新发布') +
@@ -159,6 +176,7 @@ function render() {
     otherCard() +
    '</div>' +
    todayCard() +
+   pointsCard() +
    trendCard() +
    energyTrendCard() +
    '<div class="muted" style="text-align:center;font-size:var(--fs-4);padding:4px 0 20px">' +
@@ -193,6 +211,8 @@ function mount(root) {
   root = root || UI.$('#view');
   var pc = root.querySelector('#pointsCard');
   if (pc) pc.onclick = function () { App.go('reward'); };
+  var fl = root.querySelector('#focusLine');
+  if (fl) fl.onclick = function () { App.go('plan'); };
   var be = root.querySelector('#birthEdit');
   if (be) be.onclick = function () { birthSheet(); };
  }
