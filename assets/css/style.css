@@ -1040,3 +1040,18 @@ input,textarea,select{outline:none}
  background:transparent;border-color:transparent;box-shadow:none;padding:0 20px;
  -webkit-backdrop-filter:none;backdrop-filter:none;
 }
+
+/* ---- 组 B：今日速览（1.75 份宽）‖ 积分（1 份宽）—— 宽度第一次出现差异 ----
+   甜甜圈换成细进度条：92px 的环在 60% 宽的卡里塞不下，硬塞会把「饮水 / 运动」那行挤到换行 */
+.home-row{display:grid;grid-template-columns:1.75fr 1fr;gap:10px;align-items:stretch}
+.home-row > .card,.home-row > .points-card{margin-bottom:0}
+.home-block > .home-row{margin-bottom:0}
+.mini-bar{height:8px;border-radius:var(--r-pill);background:var(--line-2);overflow:hidden}
+.mini-bar i{display:block;height:100%;border-radius:var(--r-pill);background:var(--brand);transition:width .5s ease}
+/* 积分窄卡：竖排，只留等级 + 积分 + 去兑换（经验、人物属性在奖励页都有，窄卡放不下） */
+.points-card.mini{flex-direction:column;align-items:flex-start;gap:4px;padding:16px 14px;margin-bottom:0}
+.points-card.mini .ic{width:34px;height:34px}
+.points-card.mini .pc-num{font-size:var(--fs-1);margin:0}
+.points-card.mini .pc-go{margin-top:auto;align-self:flex-start}
+/* 统计格不再三等分：首列 1.45 份，5 张卡排成「3 + 2」，行内宽窄不同 */
+.stat-grid.compact{grid-template-columns:1.45fr 1fr 1fr}
