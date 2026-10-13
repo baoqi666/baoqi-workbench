@@ -99,19 +99,8 @@
     '</div>'
    : '';
 
-  return '<div class="fade-in">' +
-   sentenceCard +
-   beautyCard +
-   '<div class="card" id="yzRemindCard">' +
-    '<div class="row" style="gap:10px;align-items:center">' +
-     '<div class="grow">' +
-      '<b style="font-size:var(--fs-3)">提醒时间</b>' +
-      '<div class="muted" style="font-size:var(--fs-4);margin-top:2px">自定义七类每日提醒的推送时刻</div>' +
-     '</div>' +
-     '<button data-act="edit-remind" style="flex:none;border:none;background:none;color:#b9a07a;font-weight:700;font-size:var(--fs-4);padding:6px 8px;cursor:pointer">设置</button>' +
-    '</div>' +
-   '</div>' +
-   '<div class="card expr-head">' +
+  return '<div class="fade-in pg-operate">' +
+   '<div class="card expr-head pg-hero">' +
     '<div class="row" style="gap:12px">' +
      '<div style="width:46px;height:46px;border-radius:var(--r-m);overflow:hidden;flex:none">' + Icons.cat('express') + '</div>' +
      '<div class="grow"><b style="font-size:var(--fs-2)">今日口语表达训练</b>' +
@@ -125,6 +114,17 @@
     ' · <button data-act="edit-training" style="border:none;background:none;color:#b9a07a;font-weight:700;font-size:var(--fs-4);padding:0 2px;cursor:pointer">编辑</button></span>' +
    '</div>' +
    (stepsHtml) +
+   sentenceCard +
+   beautyCard +
+   '<div class="card tight pg-bar" id="yzRemindCard">' +
+    '<div class="row" style="gap:10px;align-items:center">' +
+     '<div class="grow">' +
+      '<b style="font-size:var(--fs-3)">提醒时间</b>' +
+      '<div class="muted" style="font-size:var(--fs-4);margin-top:2px">自定义七类每日提醒的推送时刻</div>' +
+     '</div>' +
+     '<button data-act="edit-remind" style="flex:none;border:none;background:none;color:#b9a07a;font-weight:700;font-size:var(--fs-4);padding:6px 8px;cursor:pointer">设置</button>' +
+    '</div>' +
+   '</div>' +
    '<div style="height:24px"></div>' +
    '</div>';
  }
