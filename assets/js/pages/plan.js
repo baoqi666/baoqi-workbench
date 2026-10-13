@@ -318,7 +318,7 @@
   var charge = tasks.filter(function (t) { return t.cat === 'charge'; });
   var doneN = tasks.filter(function (t) { return t.done; }).length;
 
-  return '<div class="fade-in">' +
+  return '<div class="fade-in pg-operate">' +
    dateBar() +
    energyHead() +
    timerCard() +
