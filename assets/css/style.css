@@ -28,22 +28,23 @@
  --safe-t:env(safe-area-inset-top,0px);
 
  /* ---- 四级文字体系（全应用统一，禁止再出现散落字号） ---- */
- --fs-1:22px;        /* 一级标题：页面主标题、开屏称呼（较大 + 中偏粗） */
- --fs-2:16px;        /* 二级标题：卡片标题、分组标题（中号 + 常规偏粗） */
- --fs-3:14px;        /* 正文：主要内容（标准字号 + 常规字重） */
- --fs-4:12px;        /* 辅助文字：说明、备注、时间、标签（小号 + 更轻字重） */
- --fs-display:30px;  /* 大号数字 / 日期 */
- --fs-mark:40px;     /* 装饰引号 */
+ /* 级差稳定在 1.23~1.30 倍：13 → 16 → 20 → 26 → 32，层级靠差距产生，不靠加粗 */
+ --fs-1:26px;        /* 一级标题：页面主标题、开屏称呼（较大 + 中偏粗） */
+ --fs-2:20px;        /* 二级标题：卡片标题、分组标题（中号 + 常规偏粗） */
+ --fs-3:16px;        /* 正文：主要内容（标准字号 + 常规字重） */
+ --fs-4:13px;        /* 辅助文字：说明、备注、时间、标签（小号 + 更轻字重） */
+ --fs-display:32px;  /* 大号数字 / 日期 */
+ --fs-mark:42px;     /* 装饰引号 */
 
  /* ---- 字重层级（与四级字号配套，消除「一样粗」的死板感） ---- */
  --w-1:800;   /* 一级标题 / 大数字：中偏粗，有分量 */
  --w-2:700;   /* 二级标题：常规偏粗，清晰但不抢 */
  --w-3:400;   /* 正文：常规字重，易读 */
- --w-4:400;   /* 辅助：常规字重 + 浅灰色，克制退后 */
+ --w-4:300;   /* 辅助：更轻字重 + 浅灰色，克制退后（字体无 Light 时按最近字重回落 400） */
 
- /* ---- 统一间距系统 ---- */
+ /* ---- 统一间距系统（四档：组内 4~12 / 组件内 16 / 组间 24 / 区块 32~48） ---- */
  --sp-1:4px;  --sp-2:8px;  --sp-3:12px; --sp-4:16px;
- --sp-5:20px; --sp-6:24px; --sp-7:32px;
+ --sp-5:24px; --sp-6:32px; --sp-7:48px;
 
  /* ---- 主按钮上的文字色（随主题切换） ---- */
  --on-brand:#ffffff;
@@ -71,7 +72,7 @@ body{
  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
  color:var(--ink);
  background:var(--bg);
- font-size:var(--fs-2);
+ font-size:var(--fs-3);
  line-height:1.55;
  overflow:hidden;
  -webkit-font-smoothing:antialiased;
@@ -266,7 +267,7 @@ input,textarea,select{outline:none}
  border:1px solid var(--line);
  border-radius:var(--r-l);
  box-shadow:var(--shadow-sm);
- padding:18px;margin-bottom:16px;
+ padding:18px;margin-bottom:var(--sp-5);
 }
 .card.tight{padding:15px 16px}
 .sec-title{display:flex;align-items:center;justify-content:space-between;margin:8px 0 12px;padding-bottom:9px;border-bottom:1px solid var(--line-2)}
@@ -296,7 +297,7 @@ input,textarea,select{outline:none}
 .tag.gray{background:#f0efe9;color:#6c6b63}
 
 /* 统计卡 */
-.stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:16px}
+.stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:var(--sp-3);margin-bottom:var(--sp-5)}
 .stat-card{
  position:relative;overflow:hidden;
  border-radius:var(--r-l);padding:16px;
@@ -312,7 +313,7 @@ input,textarea,select{outline:none}
 /* 大打卡卡片 */
 .streak-card{
  position:relative;overflow:hidden;
- border-radius:var(--r-l);padding:20px;margin-bottom:16px;
+ border-radius:var(--r-l);padding:20px;margin-bottom:var(--sp-5);
  background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow-sm);
 }
 .streak-card .k{font-size:var(--fs-4);color:var(--ink-2)}
@@ -334,7 +335,7 @@ input,textarea,select{outline:none}
 
 /* 精力条 */
 .energy-head{
- border-radius:var(--r-l);padding:18px;margin-bottom:16px;
+ border-radius:var(--r-l);padding:18px;margin-bottom:var(--sp-5);
  background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow-sm);
 }
 .energy-head .eh-top{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:12px}
@@ -374,10 +375,10 @@ input,textarea,select{outline:none}
 .tomato-row i.on{background:#dcab9f}
 
 /* 任务列表 */
-.task-group{margin-bottom:6px}
+.task-group{margin-bottom:var(--sp-4)}
 .task-item{
  display:flex;align-items:flex-start;gap:11px;
- padding:12px;border-radius:var(--r-m);margin-bottom:9px;
+ padding:12px;border-radius:var(--r-m);margin-bottom:var(--sp-2);
  background:var(--card);border:1px solid var(--line);
  box-shadow:var(--shadow-sm);
  transition:opacity .25s ease;
