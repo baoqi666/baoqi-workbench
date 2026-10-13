@@ -1014,3 +1014,29 @@ input,textarea,select{outline:none}
  -webkit-backdrop-filter:var(--frost);backdrop-filter:var(--frost);
 }
 .fg-skip:active{transform:scale(.98)}
+
+/* ==========================================================
+  首页分组节奏（D 级）：组内 8px、组间 28px，取代一律 16px 的尺子节奏
+  —— 间距一样大，等于告诉眼睛「这些一样重要」
+  ========================================================== */
+.home-block{margin-bottom:28px}
+.home-block > .focus-line,
+.home-block > .streak-card,
+.home-block > .stat-grid,
+.home-block > .card,
+.home-block > .points-card{margin-bottom:8px}
+.home-block > .focus-line:last-child,
+.home-block > .streak-card:last-child,
+.home-block > .stat-grid:last-child,
+.home-block > .card:last-child,
+.home-block > .points-card:last-child{margin-bottom:0}
+/* 主角卡：内边距 20 → 24，配合 JS 里三处行距 2 → 10，让它明显高过次要卡一档
+   原来只高 1.4 倍，看起来还是「一排卡」，不是「主角 + 配角」 */
+.home-block > .streak-card{padding:24px}
+.home-block > .streak-card .streak-days{margin-top:18px}
+/* 组 C：图表去掉白卡片框。白框变稀缺，有框的那几张自动成为重点 ——
+   全页白框由 6 个降到 3 个 */
+.home-block.plain > .card{
+ background:transparent;border-color:transparent;box-shadow:none;padding:0 20px;
+ -webkit-backdrop-filter:none;backdrop-filter:none;
+}
