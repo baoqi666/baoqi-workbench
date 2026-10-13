@@ -5,10 +5,19 @@
  var Pages = global.Pages = global.Pages || {};
  var esc = UI.esc;
 
- function pointsCard() {
+ function pointsCard(mini) {
   var ap = Store.availablePoints();
   var lv = Store.playerLevel();
   var attrs = Store.rpgAttrs();
+  if (mini) {
+   return '' +
+    '<div class="points-card mini" id="pointsCard" data-go="reward">' +
+     '<div class="ic">' + Icons.cat('reward') + '</div>' +
+     '<div class="pc-num">LV.' + lv.level + '</div>' +
+     '<div class="pc-label">积分 ' + ap + ' 可兑换</div>' +
+     '<div class="pc-go">去兑换 ›</div>' +
+    '</div>';
+  }
   return '' +
    '<div class="points-card" id="pointsCard" data-go="reward">' +
     '<div class="ic">' + Icons.cat('reward') + '</div>' +
@@ -104,18 +113,16 @@
    '<div class="card">' +
     '<div class="sec-title"><h2><span class="bar-mark"></span>今日速览</h2>' +
     '<span class="more">' + Store.weekName(td) + '</span></div>' +
-    '<div class="row" style="gap:16px">' +
-     UI.donut(pct, { size: 92, stroke: 11, text: pct + '%', fontSize: 19 }) +
-     '<div class="grow">' +
-      '<div class="row" style="justify-content:space-between;font-size:var(--fs-3);margin-bottom:7px">' +
-       '<span class="muted">计划完成</span><b>' + done + ' / ' + total + '</b></div>' +
-      '<div class="row" style="justify-content:space-between;font-size:var(--fs-3);margin-bottom:7px">' +
-       '<span class="muted">剩余精力</span><b style="color:var(--brand-ink)">' + e.left + '</b></div>' +
-      '<div class="row" style="justify-content:space-between;font-size:var(--fs-3);margin-bottom:7px">' +
-       '<span class="muted">今日番茄</span><b>' + (day.pomos || 0) + '</b></div>' +
-      '<div class="row" style="justify-content:space-between;font-size:var(--fs-3)">' +
-       '<span class="muted">饮水 / 运动</span><b>' + (h.water || 0) + ' 杯 · ' + fit + ' 项</b></div>' +
-     '</div>' +
+    '<div class="mini-bar"><i style="width:' + pct + '%"></i></div>' +
+    '<div style="margin-top:12px">' +
+     '<div class="row" style="justify-content:space-between;font-size:var(--fs-3);margin-bottom:7px">' +
+      '<span class="muted">计划完成</span><b>' + done + ' / ' + total + '　' + pct + '%</b></div>' +
+     '<div class="row" style="justify-content:space-between;font-size:var(--fs-3);margin-bottom:7px">' +
+      '<span class="muted">剩余精力</span><b style="color:var(--brand-ink)">' + e.left + '</b></div>' +
+     '<div class="row" style="justify-content:space-between;font-size:var(--fs-3);margin-bottom:7px">' +
+      '<span class="muted">今日番茄</span><b>' + (day.pomos || 0) + '</b></div>' +
+     '<div class="row" style="justify-content:space-between;font-size:var(--fs-3)">' +
+      '<span class="muted">饮水 / 运动</span><b>' + (h.water || 0) + ' 杯 · ' + fit + ' 项</b></div>' +
     '</div>' +
    '</div>';
  }
@@ -178,8 +185,10 @@ function render() {
     '</div>' +
    '</div>' +
    '<div class="home-block">' +
-    todayCard() +
-    pointsCard() +
+    '<div class="home-row">' +
+     todayCard() +
+     pointsCard(true) +
+    '</div>' +
    '</div>' +
    '<div class="home-block plain">' +
     trendCard() +
