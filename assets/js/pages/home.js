@@ -39,11 +39,11 @@
     '<div class="cat">' + Icons.streakArt() + '</div>' +
     '<div class="k">连续打卡</div>' +
     '<div class="v">' + st.count + '<small>天</small></div>' +
-    '<div class="k" style="margin-top:2px">已登陆地球</div>' +
+    '<div class="k" style="margin-top:10px">已登陆地球</div>' +
     '<div class="v">' + earth + '<small>天</small></div>' +
-    '<div class="k" style="margin-top:2px">人生进度</div>' +
+    '<div class="k" style="margin-top:10px">人生进度</div>' +
     '<div class="v">' + pText + '<small>%</small></div>' +
-    '<div class="k" style="margin-top:2px">累计专注 ' + UI.fmtMin(Store.totalFocus()) + '</div>' +
+    '<div class="k" style="margin-top:10px">累计专注 ' + UI.fmtMin(Store.totalFocus()) + '</div>' +
     '<div id="birthEdit" style="margin-top:8px;font-size:var(--fs-4);color:var(--brand-ink);cursor:pointer">' + (birth ? ('出生于 ' + birth + ' · 点击修改') : '设置出生日期 ›') + '</div>' +
     '<div class="streak-days">' + cells + '</div>' +
    '</div>';
@@ -166,19 +166,25 @@ function focusLine() {
 
 function render() {
  return '<div class="fade-in">' +
-   focusLine() +
-   streakCard() +
-   '<div class="stat-grid compact">' +
-    statCard('english', '英语听力训练', '听力完成') +
-    statCard('knowledge', '高质量知识学习', '学习') +
-    statCard('account', '个人账号更新', '更新发布') +
-    outputCard() +
-    otherCard() +
+   '<div class="home-block">' +
+    focusLine() +
+    streakCard() +
+    '<div class="stat-grid compact">' +
+     statCard('english', '英语听力训练', '听力完成') +
+     statCard('knowledge', '高质量知识学习', '学习') +
+     statCard('account', '个人账号更新', '更新发布') +
+     outputCard() +
+     otherCard() +
+    '</div>' +
    '</div>' +
-   todayCard() +
-   pointsCard() +
-   trendCard() +
-   energyTrendCard() +
+   '<div class="home-block">' +
+    todayCard() +
+    pointsCard() +
+   '</div>' +
+   '<div class="home-block plain">' +
+    trendCard() +
+    energyTrendCard() +
+   '</div>' +
    '<div class="muted" style="text-align:center;font-size:var(--fs-4);padding:4px 0 20px">' +
     '数据由「每日计划」的番茄钟 / 正计时自动同步汇总</div>' +
    '</div>';
