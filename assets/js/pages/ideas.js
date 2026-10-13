@@ -110,8 +110,8 @@
   var done = list.filter(function (i) { return i.done; });
   var all = Store.state.ideas;
 
-  return '<div class="fade-in">' +
-   '<div class="card tight">' +
+  return '<div class="fade-in pg-operate">' +
+   '<div class="card tight pg-bar">' +
     '<div class="row" style="gap:12px">' +
      '<div style="width:44px;height:44px;border-radius:var(--r-m);overflow:hidden;flex:none">' + Icons.cat('idea') + '</div>' +
      '<div class="grow"><b style="font-size:var(--fs-3)">未来想做的事</b>' +
