@@ -20,6 +20,12 @@
  --danger:#c87a6e;
  --shadow:0 1px 2px rgba(50,40,18,.05), 0 4px 16px rgba(50,40,18,.04);
  --shadow-sm:0 1px 2px rgba(50,40,18,.05);
+ /* 卡片主投影：近处一层收边（贴地的实影）+ 远处一层大范围扩散（把卡片托起来）。
+    负 spread 让远影收在卡片下方，不会糊到旁边的卡片上。 */
+ --shadow-card:0 1px 2px rgba(50,40,18,.05), 0 10px 24px -12px rgba(50,40,18,.14);
+ /* 卡片收边色：极淡的暖深色。原来用 --edge（rgba(255,255,255,.62)）等于白卡上的白边，
+    完全没有分离感 —— 这是「卡片很普通」的根因。暖深色在白底和壁纸两种场景下都成立。 */
+ --edge-ink:rgba(50,40,18,.07);
  --r-l:20px;
  --r-m:14px;
  --r-s:10px;
@@ -377,7 +383,7 @@ input,textarea,select{outline:none}
 /* 精力条 */
 .energy-head{
  border-radius:var(--r-l);padding:18px;margin-bottom:16px;
- background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow-sm);
+ background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow-card);
 }
 .energy-head .eh-top{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:12px}
 .energy-head .eh-left .t{font-size:var(--fs-4);color:var(--ink-2)}
@@ -909,7 +915,7 @@ input,textarea,select{outline:none}
 /* ---- 组件统一：圆角与阴影（统一到 --r-l / --shadow） ---- */
 .card,.stat-card,.points-card,.streak-card,.quote-card{
  border-radius:var(--r-l);
- box-shadow:var(--shadow);
+ box-shadow:var(--shadow-card);
 }
 .pill-btn,.enter-btn{border-radius:var(--r-pill)}
 .pill-btn.plain{border-radius:var(--r-pill)}
@@ -922,7 +928,7 @@ input,textarea,select{outline:none}
  -webkit-backdrop-filter:var(--frost);
  backdrop-filter:var(--frost);
  background:var(--card);
- border:1px solid var(--edge);
+ border:1px solid var(--edge-ink);
 }
 /* 顶栏同样磨砂，但保留底部细分隔、不加四边描边 */
 .topbar{
