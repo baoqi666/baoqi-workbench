@@ -96,7 +96,7 @@
   var rewards = Store.state.rewards || [];
   var log = (Store.state.redeemLog || []).slice(0, 30);
 
-  var head = '<div class="card reward-head">' +
+  var head = '<div class="card reward-head pg-hero">' +
    '<div class="rr-ic">' + Icons.cat('reward') + '</div>' +
    '<div class="grow"><b class="rr-name">奖励兑换</b>' +
     '<div class="muted" style="font-size:var(--fs-4)">专注赚积分，用积分兑换你想要的奖励</div></div>' +
@@ -127,10 +127,10 @@
 
   var hist = log.length
    ? '<div class="sec-title"><h2><span class="bar-mark"></span>兑换记录</h2></div>' +
-     '<div class="card">' + log.map(histRow).join('') + '</div>'
+     '<div class="card pg-list">' + log.map(histRow).join('') + '</div>'
    : '';
 
-  return '<div class="fade-in">' + head + recSec + list + hist + '<div style="height:56px"></div></div>' +
+  return '<div class="fade-in pg-operate">' + head + recSec + list + hist + '<div style="height:56px"></div></div>' +
    '<button class="fab" id="addReward"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>';
  }
 
