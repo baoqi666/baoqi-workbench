@@ -183,7 +183,7 @@
   var totalTgt = funds.reduce(function (a, f) { return a + (f.target || 0); }, 0);
   var overall = totalTgt ? Math.min(100, Math.round(totalBal / totalTgt * 100)) : 0;
 
-  var summary = '<div class="card dream-summary">' +
+  var summary = '<div class="card dream-summary pg-hero">' +
    '<div class="row" style="gap:12px">' +
     '<div style="width:46px;height:46px;border-radius:var(--r-m);overflow:hidden;flex:none">' + Icons.cat('dream') + '</div>' +
     '<div class="grow"><b style="font-size:var(--fs-2)">梦想储蓄罐</b>' +
@@ -199,7 +199,7 @@
     funds.map(fundCard).join('')
    : UI.emptyBox('还没有基金，点右下角 + 创建第一个梦想目标 ');
 
-  return '<div class="fade-in">' + budgetBlock() + summary + list + '<div style="height:56px"></div></div>' +
+  return '<div class="fade-in pg-operate">' + summary + budgetBlock() + list + '<div style="height:56px"></div></div>' +
    '<button class="fab" id="addFund"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>';
  }
 
