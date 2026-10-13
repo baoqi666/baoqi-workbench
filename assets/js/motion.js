@@ -31,31 +31,61 @@
     1. 完成反馈按钮（#enterBtn「开始今天」= 每日签到打卡入口）
     点击 → 收缩成圆 → 画出对勾 → 粒子迸发 → 更新连续打卡天数（1.2s）
     ============================================================ */
- function playParticles(el) {
+ /* 粒子迸发。el 与 opt.cx/cy 二选一：传坐标是为了「元素马上要被重渲染销毁」的场景
+    （如勾选任务后 plan.js 立刻 refresh，原 .tick 节点已不存在）。 */
+ function playParticles(el, opt) {
   if (!WA || RM) return;
-  var r = el.getBoundingClientRect();
-  var cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+  opt = opt || {};
+  var cx = opt.cx, cy = opt.cy;
+  if (cx == null || cy == null) {
+   if (!el || !el.getBoundingClientRect) return;
+   var r = el.getBoundingClientRect();
+   cx = r.left + r.width / 2; cy = r.top + r.height / 2;
+  }
+  var n = opt.count || 14;
+  var near = opt.near == null ? 42 : opt.near;
+  var spread = opt.spread == null ? 40 : opt.spread;
+  var delay0 = opt.delay == null ? 380 : opt.delay;
   var colors = ['#7fb8f5', '#a9c9b8', '#f0c98a', '#e6a9a0', '#c9b6e4'];
-  for (var i = 0; i < 14; i++) {
+  for (var i = 0; i < n; i++) {
    var node = D.createElement('i');
    node.className = 'fin-particle';
    node.style.left = (cx - 3.5) + 'px';
    node.style.top = (cy - 3.5) + 'px';
    node.style.background = colors[i % colors.length];
    D.body.appendChild(node);
-   (function (n, idx) {
-    var ang = (Math.PI * 2) * (idx / 14) + (Math.random() * 0.5);
-    var dist = 42 + Math.random() * 40;
+   (function (nd, idx) {
+    var ang = (Math.PI * 2) * (idx / n) + (Math.random() * 0.5);
+    var dist = near + Math.random() * spread;
     var dx = Math.cos(ang) * dist, dy = Math.sin(ang) * dist;
-    var a = n.animate([
+    var a = nd.animate([
      { transform: 'translate(0,0) scale(.35)', opacity: 0 },
      { transform: 'translate(' + (dx * .55) + 'px,' + (dy * .55) + 'px) scale(1)', opacity: 1, offset: .28 },
      { transform: 'translate(' + dx + 'px,' + dy + 'px) scale(.18)', opacity: 0 }
-    ], { duration: 720 + Math.random() * 240, easing: 'cubic-bezier(.2,.8,.3,1)', delay: 380 + idx * 8 });
-    a.onfinish = function () { try { n.remove(); } catch (e) {} };
+    ], { duration: 720 + Math.random() * 240, easing: 'cubic-bezier(.2,.8,.3,1)', delay: delay0 + idx * 8 });
+    a.onfinish = function () { try { nd.remove(); } catch (e) {} };
    })(node, i);
-   (function (n) { setTimeout(function () { try { n.remove(); } catch (e) {} }, 1500); })(node);
+   (function (nd) { setTimeout(function () { try { nd.remove(); } catch (e) {} }, delay0 + 1500); })(node);
   }
+ }
+
+ /* 完成一件任务的庆祝反馈：勾选框位置一圈脉冲 + 粒子迸发。
+    幅度按 23px 的勾选框收敛，不做成按钮那种大迸发。 */
+ function playDoneBurst(cx, cy) {
+  if (RM) return;
+  playParticles(null, { cx: cx, cy: cy, count: 12, near: 20, spread: 34, delay: 40 });
+  if (!WA) return;
+  var ring = D.createElement('i');
+  ring.className = 'fin-donering';
+  ring.style.left = (cx - 13) + 'px';
+  ring.style.top = (cy - 13) + 'px';
+  D.body.appendChild(ring);
+  var a = ring.animate([
+   { transform: 'scale(.35)', opacity: .9 },
+   { transform: 'scale(2)', opacity: 0 }
+  ], { duration: 560, easing: 'cubic-bezier(.2,.8,.3,1)' });
+  a.onfinish = function () { try { ring.remove(); } catch (e) {} };
+  setTimeout(function () { try { ring.remove(); } catch (e) {} }, 900);
  }
 
  /* 数字平滑滚动（保留原有后缀，如 <small>天</small>） */
@@ -89,6 +119,10 @@
  }
 
  function initCheckin() {
+  /* 2026-10-13 关闭：宝琪反馈「开始今天」是进门按钮，在这里放 1.2s 的打卡庆祝特效很违和。
+     这套特效已搬到「勾选完成一个任务」之后（见 initToggle / playDoneBurst）——
+     完成一件事才是值得庆祝的时刻。需要时去掉下面这行 return。 */
+  return;
   var btn = $('#enterBtn');
   if (!btn || btn.dataset.finBound) return;
   btn.dataset.finBound = '1';
@@ -121,6 +155,7 @@
     三者同步执行
     ============================================================ */
  var pendingOld = null;
+ var pendingDone = null;  /* 本次点击若是「完成」，记下勾选框中心坐标（元素马上会被 refresh 销毁） */
 
  function ensureRing() {
   var bar = $('.topbar');
@@ -201,12 +236,24 @@
    if (!tick) return;
    var el = numTargetOf(tick);
    pendingOld = el ? intOf(el.textContent) : null;
+   /* 捕获阶段先判断这次是「完成」还是「取消完成」：勾选框此刻还没有 .on，
+      说明点下去会变成完成。同时把中心坐标记下来 —— 业务立刻 refresh 重渲染，
+      原节点马上就没了，事后拿不到位置。 */
+   var willDone = !tick.classList.contains('on');
+   var r = tick.getBoundingClientRect();
+   pendingDone = willDone ? { cx: r.left + r.width / 2, cy: r.top + r.height / 2 } : null;
   }), true);
-  /* 冒泡阶段：业务逻辑（含 refresh）已执行完，播放联动动画 */
+  /* 冒泡阶段：业务逻辑（含 refresh）已执行完，播放联动动画 + 完成庆祝 */
   D.addEventListener('click', safe(function (e) {
    var t = e.target; if (!t || !t.closest) return;
    if (!t.closest('[data-act="toggle"]')) return;
-   requestAnimationFrame(safe(function () { setTimeout(safe(runLinkage), 40); }));
+   var burst = pendingDone; pendingDone = null;
+   requestAnimationFrame(safe(function () {
+    setTimeout(safe(function () {
+     runLinkage();
+     if (burst) playDoneBurst(burst.cx, burst.cy);
+    }), 40);
+   }));
   }), false);
  }
 
