@@ -1,0 +1,79 @@
+/* ============================================================
+   微交互 / 动效层（finesse animate · h5 morph A.1 工作台）
+   只叠加动画与微反馈：不改动任何原有布局、文案、配色逻辑。
+   所有动画 0.3~1.2s；失败不影响业务逻辑；尊重 prefers-reduced-motion。
+   ============================================================ */
+
+/* ---------- 1. 完成反馈按钮（#enterBtn 开始今天） ---------- */
+#enterBtn{position:relative;overflow:hidden;
+ transition:width .42s cubic-bezier(.34,1.32,.5,1),height .42s cubic-bezier(.34,1.32,.5,1),
+            border-radius .42s cubic-bezier(.34,1.32,.5,1),padding .42s ease,min-width .42s ease}
+#enterBtn.fin-run{width:56px!important;height:56px;min-width:56px;padding:0;border-radius:50%;justify-content:center}
+#enterBtn.fin-run>span:not(.fin-check),#enterBtn.fin-run>svg{opacity:0;transition:opacity .16s ease}
+#enterBtn .fin-check{position:absolute;left:0;right:0;top:0;bottom:0;display:none;align-items:center;justify-content:center}
+#enterBtn.fin-run .fin-check{display:flex}
+#enterBtn .fin-check svg{width:26px;height:26px;fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:3.2;stroke:#fff}
+#enterBtn .fin-check path{stroke-dasharray:40;stroke-dashoffset:40}
+#enterBtn.fin-draw .fin-check path{animation:finDraw .4s .4s cubic-bezier(.6,.02,.3,1) forwards}
+@keyframes finDraw{to{stroke-dashoffset:0}}
+.fin-particle{position:fixed;z-index:12040;width:7px;height:7px;border-radius:50%;pointer-events:none;will-change:transform,opacity}
+
+/* ---------- 2. 勾选联动 ---------- */
+.topbar{position:relative}
+.fin-flashlayer{position:absolute;inset:0;pointer-events:none;opacity:0;z-index:0;
+ background:var(--brand-soft,rgba(127,184,245,.22))}
+.fin-flashlayer.on{animation:finFlash .7s ease forwards}
+@keyframes finFlash{0%{opacity:0}30%{opacity:.85}100%{opacity:0}}
+.fin-ring{position:absolute;right:16px;top:50%;margin-top:-15px;width:30px;height:30px;
+ pointer-events:none;opacity:0;transition:opacity .32s ease;z-index:6}
+.fin-ring.on{opacity:1}
+.fin-ring svg{width:30px;height:30px;transform:rotate(-90deg);display:block}
+.fin-ring circle{fill:none;stroke-width:3;stroke-linecap:round}
+.fin-ring .bg{stroke:var(--line,rgba(0,0,0,.08))}
+.fin-ring .fg{stroke:var(--brand,#7fb8f5);transition:stroke-dashoffset .72s cubic-bezier(.25,.9,.3,1)}
+.fin-num{transition:none}
+
+/* ---------- 3. 叠卡展开（首页 stat-grid） ---------- */
+.stat-grid{position:relative}
+.stat-card{transition:transform .52s cubic-bezier(.22,.85,.3,1),box-shadow .52s ease,opacity .52s ease;transform-origin:top left}
+.stat-grid.fin-deck .stat-card{position:relative}
+.stat-grid.fin-deck.fin-collapsed .stat-card{box-shadow:0 6px 18px rgba(60,50,40,.13)}
+.stat-grid.fin-deck.fin-collapsed .stat-card:nth-child(1){z-index:5;transform:translate(0,0) scale(1)}
+.stat-grid.fin-deck.fin-collapsed .stat-card:nth-child(2){z-index:4;transform:translate(7px,-5px) scale(.985)}
+.stat-grid.fin-deck.fin-collapsed .stat-card:nth-child(3){z-index:3;transform:translate(14px,-10px) scale(.97)}
+.stat-grid.fin-deck.fin-collapsed .stat-card:nth-child(4){z-index:2;transform:translate(21px,-15px) scale(.955)}
+.stat-grid.fin-deck.fin-collapsed .stat-card:nth-child(5){z-index:1;transform:translate(28px,-20px) scale(.94)}
+.stat-grid.fin-deck.fin-collapsed .stat-card:nth-child(n+6){z-index:1;transform:translate(28px,-20px) scale(.94)}
+.stat-grid .stat-card.fin-tap{animation:finTap .34s ease}
+@keyframes finTap{0%{transform:scale(1)}40%{transform:scale(.975)}100%{transform:scale(1)}}
+.fin-deck-hint{font-size:var(--fs-4,11px);color:var(--ink-3,#9a8f86);text-align:center;margin-top:-6px;margin-bottom:12px;opacity:.9}
+
+/* ---------- 4. 吸附卡 + 侧边连接线 ---------- */
+.fin-snap{scroll-snap-type:y proximity;-webkit-overflow-scrolling:touch}
+.fin-snap .task-item,.fin-snap .todo-item{scroll-snap-align:center}
+.task-item,.todo-item{position:relative}
+.fin-linkline{position:absolute;left:1px;top:-8px;bottom:-8px;width:16px;pointer-events:none;overflow:visible;z-index:0}
+.fin-linkline path{fill:none;stroke:var(--brand,#7fb8f5);stroke-width:2;stroke-linecap:round;opacity:.85}
+.fin-linkline circle{fill:var(--brand,#7fb8f5)}
+.task-item.fin-snapped{box-shadow:0 8px 22px rgba(60,50,40,.12)}
+
+/* ---------- 5. 惯性滚动 + 边界阻尼回弹 ---------- */
+.fin-momentum{overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch}
+.fin-rubber{will-change:transform}
+
+/* ---------- 6. 圆形扩散转场 ---------- */
+.fin-reveal{position:fixed;inset:0;z-index:12050;display:flex;align-items:center;justify-content:center;
+ background:rgba(28,24,20,.34);padding:24px}
+.fin-reveal-panel{max-width:100%;max-height:82vh;overflow:auto;border-radius:var(--r-l,16px);
+ background:var(--card,#fff);box-shadow:0 18px 48px rgba(50,40,32,.22);padding:18px 18px 16px;
+ transform:scale(.97);opacity:0;transition:transform .34s cubic-bezier(.2,.9,.3,1),opacity .28s ease}
+.fin-reveal.in .fin-reveal-panel{transform:scale(1);opacity:1}
+.fin-reveal-panel .fin-close{display:block;margin:14px auto 0;padding:9px 22px;border-radius:999px;
+ border:1px solid var(--line,rgba(0,0,0,.08));background:var(--brand-soft,rgba(127,184,245,.18));
+ color:var(--brand-ink,#4a86c8);font-size:var(--fs-3,13px);font-weight:700}
+
+/* ---------- 无障碍：降低动效 ---------- */
+@media (prefers-reduced-motion:reduce){
+ *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+ .fin-particle{display:none!important}
+}
