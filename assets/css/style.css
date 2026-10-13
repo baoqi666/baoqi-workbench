@@ -302,12 +302,27 @@ input,textarea,select{outline:none}
  border-radius:var(--r-l);padding:16px;
  background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow-sm);
 }
-.stat-card .ic{width:36px;height:36px;border-radius:var(--r-m);overflow:hidden;margin-bottom:9px;border:1px solid var(--line)}
+.stat-card .ic{width:32px;height:32px;border-radius:var(--r-m);overflow:hidden;margin-bottom:9px}
 .stat-card .ic svg{width:100%;height:100%;display:block}
 .stat-card .num{font-size:var(--fs-1);font-weight:var(--w-1);line-height:1.1;letter-spacing:-.5px}
 .stat-card .num small{font-size:var(--fs-4);font-weight:700;color:var(--ink-3);margin-left:2px}
 .stat-card .lb{font-size:var(--fs-4);color:var(--ink-2);margin-top:5px}
 .stat-card .sub{font-size:var(--fs-4);color:var(--ink-3);margin-top:9px;padding-top:8px;border-top:1px solid var(--line-2)}
+
+/* B 级①：统计网格为奇数张时，末位卡跨两列补上右下角空缺。
+   首页是 5 张 → 生效；周总结页是 4 张与 8 张（偶数）→ 自动不生效。 */
+.stat-grid > .stat-card:last-child:nth-child(odd){
+ grid-column:1 / -1;
+ display:grid;grid-template-columns:auto 1fr;column-gap:12px;align-items:center;
+}
+.stat-grid > .stat-card:last-child:nth-child(odd) .ic{grid-column:1;grid-row:1 / span 3;margin-bottom:0}
+.stat-grid > .stat-card:last-child:nth-child(odd) .num,
+.stat-grid > .stat-card:last-child:nth-child(odd) .lb,
+.stat-grid > .stat-card:last-child:nth-child(odd) .sub{grid-column:2}
+
+/* B 级②：数字统一等宽，避免数值跳动时整行左右抖（原来只有 .ring-time 有） */
+.stat-card .num,.streak-card .v,.pc-num,.energy-head .eh-left .n,
+.timer-meta b,.exp-amt,.hist-cost,.cal-cell,.todo-time{font-variant-numeric:tabular-nums}
 
 /* 大打卡卡片 */
 .streak-card{
@@ -384,7 +399,9 @@ input,textarea,select{outline:none}
 }
 .task-item.done{opacity:.55}
 .task-item.done .t-name{text-decoration:line-through;color:var(--ink-3)}
-.task-item.overdue{border-left:3px solid var(--warn)}
+/* B 级③：原来用 3px 左边框压在 1px 描边上，左侧会出现一个台阶。
+   改成四边仍是 1px（左边框只换色），用 inset 阴影画内嵌色条，视觉一致且不影响盒模型。 */
+.task-item.overdue{border-left:1px solid var(--warn);box-shadow:var(--shadow-sm), inset 3px 0 0 var(--warn)}
 .tick{
  width:23px;height:23px;border-radius:var(--r-s);flex:none;margin-top:1px;
  border:2px solid #cdd2da;display:grid;place-items:center;background:#fff;
