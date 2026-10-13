@@ -8,6 +8,9 @@
  --ink:#2d2b27;
  --ink-2:#5f5c54;
  --ink-3:#9c958a;
+ /* ④ 卡内「标签」专用色：比 --ink-2 更浅一档，让标签退到背景、数值成为主角。
+    只在卡片信息行里用，不要全局替换 --ink-2（那是正文级灰）。 */
+ --ink-lb:#a49d90;
  --card:#ffffff;
  --card-2:#f9f6ee;
  --line:#e4e0d4;
@@ -272,10 +275,12 @@ input,textarea,select{outline:none}
  border:1px solid var(--line);
  border-radius:var(--r-l);
  box-shadow:var(--shadow-sm);
- padding:18px;margin-bottom:16px;
+ /* ③ 卡片内边距 18 → 20：内容离边更远，卡片才显得「装得下东西」而不是挤在里面 */
+ padding:20px;margin-bottom:16px;
 }
 .card.tight{padding:15px 16px}
-.sec-title{display:flex;align-items:center;justify-content:space-between;margin:8px 0 12px;padding-bottom:9px;border-bottom:1px solid var(--line-2)}
+/* ② 卡内不用 1px 线分组，改用留白分组（线是最廉价的分隔方式，且卡片浮起后硬线会割裂） */
+.sec-title{display:flex;align-items:center;justify-content:space-between;margin:10px 0 16px}
 .sec-title h2{font-size:var(--fs-2);font-weight:var(--w-2);display:flex;align-items:center;gap:7px}
 .sec-title h2 .bar-mark{width:4px;height:15px;border-radius:var(--r-s);background:var(--brand)}
 .sec-title .more{font-size:var(--fs-4);color:var(--ink-3)}
@@ -312,8 +317,11 @@ input,textarea,select{outline:none}
 .stat-card .ic svg{width:100%;height:100%;display:block}
 .stat-card .num{font-size:var(--fs-1);font-weight:var(--w-1);line-height:1.1;letter-spacing:-.5px}
 .stat-card .num small{font-size:var(--fs-4);font-weight:700;color:var(--ink-3);margin-left:2px}
-.stat-card .lb{font-size:var(--fs-4);color:var(--ink-2);margin-top:5px}
-.stat-card .sub{font-size:var(--fs-4);color:var(--ink-3);margin-top:9px;padding-top:8px;border-top:1px solid var(--line-2)}
+.stat-card .lb{font-size:var(--fs-4);color:var(--ink-lb);margin-top:5px}
+/* ② 卡内不用 1px 线分组，改用留白分组（硬线会把浮起的卡片割成两半） */
+.stat-card .sub{font-size:var(--fs-4);color:var(--ink-3);margin-top:10px}
+/* ④ 卡内信息行：标签用 --ink-lb 退到背景，行内数值提到 600 字重成为第一眼落点 */
+.stat-card .sub b{font-weight:600}
 
 /* B 级①：统计网格为奇数张时，末位卡跨两列补上右下角空缺。
    首页是 5 张 → 生效；周总结页是 4 张与 8 张（偶数）→ 自动不生效。 */
@@ -332,7 +340,7 @@ input,textarea,select{outline:none}
 .stat-grid.compact .stat-card .ic{width:26px;height:26px;margin-bottom:7px}
 .stat-grid.compact .stat-card .num{font-size:var(--fs-2)}
 .stat-grid.compact .stat-card .lb{font-size:var(--fs-4);margin-top:4px}
-.stat-grid.compact .stat-card .sub{margin-top:7px;padding-top:6px}
+.stat-grid.compact .stat-card .sub{margin-top:8px}
 /* 5 张 = 3 + 2：末位跨 2 列刚好填满，不留空格 */
 .stat-grid.compact > .stat-card:last-child:nth-child(3n+2){grid-column:span 2}
 
@@ -363,7 +371,7 @@ input,textarea,select{outline:none}
  border-radius:var(--r-l);padding:20px;margin-bottom:16px;
  background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow-sm);
 }
-.streak-card .k{font-size:var(--fs-4);color:var(--ink-2)}
+.streak-card .k{font-size:var(--fs-4);color:var(--ink-lb)}
 .streak-card .v{font-size:var(--fs-mark);font-weight:var(--w-1);line-height:1.05;margin-top:2px;color:var(--ink)}
 .streak-card .v small{font-size:var(--fs-3);font-weight:600;margin-left:4px;color:var(--ink-2)}
 .streak-card .cat{position:absolute;right:10px;top:50%;transform:translateY(-50%);width:84px;opacity:.9;z-index:1}
@@ -382,14 +390,16 @@ input,textarea,select{outline:none}
 
 /* 精力条 */
 .energy-head{
- border-radius:var(--r-l);padding:18px;margin-bottom:16px;
+ border-radius:var(--r-l);padding:20px;margin-bottom:16px;
  background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow-card);
 }
-.energy-head .eh-top{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:12px}
-.energy-head .eh-left .t{font-size:var(--fs-4);color:var(--ink-2)}
+.energy-head .eh-top{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:16px}
+.energy-head .eh-left .t{font-size:var(--fs-4);color:var(--ink-lb)}
 .energy-head .eh-left .n{font-size:var(--fs-display);font-weight:var(--w-1);line-height:1.05;color:var(--ink)}
 .energy-head .eh-left .n small{font-size:var(--fs-3);font-weight:600;color:var(--ink-2)}
-.energy-head .eh-right{text-align:right;font-size:var(--fs-4);line-height:1.7;color:var(--ink-2)}
+/* ④「已消耗 / 已充能」这类标签也退到 --ink-lb，数值提重并回到 --ink，形成标签暗、数值亮的对比 */
+.energy-head .eh-right{text-align:right;font-size:var(--fs-4);line-height:1.7;color:var(--ink-lb)}
+.energy-head .eh-stat b{font-weight:600;color:var(--ink)}
 .energy-bar{height:14px;border-radius:var(--r-s);background:var(--line);overflow:hidden;display:flex}
 .energy-bar i{display:block;height:100%;transition:width .5s ease}
 .energy-bar .used{background:#dcab9f}
@@ -398,7 +408,7 @@ input,textarea,select{outline:none}
 .energy-legend i{width:8px;height:8px;border-radius:var(--r-s);display:inline-block;margin-right:5px}
 
 /* 计时器 */
-.timer-card{text-align:center;padding:18px 16px 16px}
+.timer-card{text-align:center;padding:20px 18px 18px}
 .timer-modes{display:inline-flex;background:var(--line-2);border-radius:var(--r-m);padding:4px;margin-bottom:14px}
 .timer-modes button{padding:7px 16px;border-radius:var(--r-m);font-size:var(--fs-4);font-weight:700;color:var(--ink-2)}
 .timer-modes button.on{background:#fff;color:var(--brand-ink);box-shadow:var(--shadow-sm)}
@@ -689,7 +699,7 @@ input,textarea,select{outline:none}
   新增：复盘日历 / 待办 / 基金 / 玉琢 / 充能
   ========================================================== */
 /* 计划页充能按钮 */
-.energy-head .eh-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;font-size:var(--fs-4);line-height:1.7;color:var(--ink-2)}
+.energy-head .eh-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px;font-size:var(--fs-4);line-height:1.7;color:var(--ink-lb)}
 .eh-charge{
  align-self:flex-end;background:var(--card);color:var(--brand-ink);
  border:1px solid var(--line);border-radius:var(--r-m);padding:6px 13px;font-size:var(--fs-4);font-weight:800;
@@ -812,7 +822,8 @@ input,textarea,select{outline:none}
 .bstat b.pos{color:var(--brand)}
 .budget-acts{display:flex;gap:10px}
 .budget-acts .pill-btn{flex:1;justify-content:center;height:42px}
-.exp-list{margin-top:12px;border-top:1px solid var(--line);padding-top:6px}
+/* ② 同上：卡内列表不再用 1px 线切开，靠 16px 留白分组 */
+.exp-list{margin-top:16px}
 .exp-row{display:flex;align-items:center;gap:8px;padding:7px 0;font-size:var(--fs-3)}
 .exp-cat{flex:none;background:var(--brand-soft);color:var(--brand-ink);border-radius:var(--r-s);padding:2px 8px;font-size:var(--fs-4)}
 .exp-note{flex:1;color:var(--ink-3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -944,7 +955,7 @@ input,textarea,select{outline:none}
 .drawer-energy{padding:0 var(--sp-4) 14px}
 .nav-list{padding:var(--sp-3) var(--sp-3)}
 .splash{padding:calc(30px + var(--safe-t)) var(--sp-5) calc(26px + var(--safe-b))}
-.sec-title{margin-bottom:var(--sp-3)}
+.sec-title{margin-bottom:var(--sp-4)}
 
 /* ==========================================================
    专注启动台（开屏之后的大号番茄钟）
