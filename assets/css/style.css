@@ -311,14 +311,41 @@ input,textarea,select{outline:none}
 
 /* B 级①：统计网格为奇数张时，末位卡跨两列补上右下角空缺。
    首页是 5 张 → 生效；周总结页是 4 张与 8 张（偶数）→ 自动不生效。 */
-.stat-grid > .stat-card:last-child:nth-child(odd){
+.stat-grid:not(.compact) > .stat-card:last-child:nth-child(odd){
  grid-column:1 / -1;
  display:grid;grid-template-columns:auto 1fr;column-gap:12px;align-items:center;
 }
-.stat-grid > .stat-card:last-child:nth-child(odd) .ic{grid-column:1;grid-row:1 / span 3;margin-bottom:0}
-.stat-grid > .stat-card:last-child:nth-child(odd) .num,
-.stat-grid > .stat-card:last-child:nth-child(odd) .lb,
-.stat-grid > .stat-card:last-child:nth-child(odd) .sub{grid-column:2}
+.stat-grid:not(.compact) > .stat-card:last-child:nth-child(odd) .ic{grid-column:1;grid-row:1 / span 3;margin-bottom:0}
+.stat-grid:not(.compact) > .stat-card:last-child:nth-child(odd) .num,
+.stat-grid:not(.compact) > .stat-card:last-child:nth-child(odd) .lb,
+.stat-grid:not(.compact) > .stat-card:last-child:nth-child(odd) .sub{grid-column:2}
+
+/* ---- C 级：首页统计格降为三列小格，明显比主角小，不与 Hero 抢视线 ---- */
+.stat-grid.compact{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:16px}
+.stat-grid.compact .stat-card{padding:11px 10px;border-radius:var(--r-m)}
+.stat-grid.compact .stat-card .ic{width:26px;height:26px;margin-bottom:7px}
+.stat-grid.compact .stat-card .num{font-size:var(--fs-2)}
+.stat-grid.compact .stat-card .lb{font-size:var(--fs-4);margin-top:4px}
+.stat-grid.compact .stat-card .sub{margin-top:7px;padding-top:6px}
+/* 5 张 = 3 + 2：末位跨 2 列刚好填满，不留空格 */
+.stat-grid.compact > .stat-card:last-child:nth-child(3n+2){grid-column:span 2}
+
+/* ---- C 级：首屏结论条，一句话告诉今天该干什么 ---- */
+.focus-line{
+ display:flex;align-items:center;gap:10px;
+ padding:10px 12px;margin-bottom:12px;
+ border-radius:var(--r-m);
+ background:var(--line-2);
+}
+.focus-line .fl-text{
+ flex:1;min-width:0;font-size:var(--fs-4);font-weight:700;color:var(--ink);
+ overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.focus-line .fl-energy{
+ flex:none;font-size:var(--fs-4);font-weight:700;color:var(--brand-ink);
+ background:var(--brand-soft);border-radius:var(--r-pill);padding:3px 9px;
+}
+.focus-line:active{transform:scale(.99)}
 
 /* B 级②：数字统一等宽，避免数值跳动时整行左右抖（原来只有 .ring-time 有） */
 .stat-card .num,.streak-card .v,.pc-num,.energy-head .eh-left .n,
