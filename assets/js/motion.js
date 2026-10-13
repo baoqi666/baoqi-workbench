@@ -215,6 +215,9 @@
     初始堆叠（每张向右上偏移露边）→ 点顶层依次展开（间隔 .2s）→ 再点原路收起
     ============================================================ */
  function initDeck() {
+  /* 2026-10-13 关闭：初始堆叠让首页统计区看起来是「一堆歪着的卡片」，是「排版杂乱」的直接来源。
+     现在统计网格保持正常平铺；需要叠卡效果时把下面这行 return 去掉即可。 */
+  return;
   var grid = $('.stat-grid');
   if (!grid || grid.dataset.finDeck) return;
   var cards = $$('.stat-card', grid);
@@ -311,6 +314,10 @@
  }
 
  function initSnap() {
+  /* 2026-10-13 关闭：scroll-snap 与下面第 5 项的手动位移、以及原生惯性三者互相打架，
+     在 Android WebView 上表现为滑动顿挫 + 松手后位置乱跳；且 onScrollEnd 会对每个
+     .task-item 做 getBoundingClientRect（强制同步布局）。需要时去掉下面这行 return。 */
+  return;
   var sc = scroller();
   if (!sc) return;
   if ($$('.task-item').length) {
@@ -331,6 +338,10 @@
     5. 惯性滚动 + 边界阻尼回弹（不劫持原生惯性，只在边界做阻尼）
     ============================================================ */
  function bindMomentum() {
+  /* 2026-10-13 关闭：对「滚动容器自身」做 translateY 会让它脱离原生滚动的合成路径，
+     是滑动掉帧最确定的一个来源（触摸移动期间每帧写 transform + 读 scrollHeight）。
+     边界回弹这个效果代价大于收益。需要时去掉下面这行 return。 */
+  return;
   var sc = scroller();
   if (!sc || sc.dataset.finMom) return;
   sc.dataset.finMom = '1';
