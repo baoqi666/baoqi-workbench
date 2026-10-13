@@ -18,6 +18,10 @@
 @keyframes finDraw{to{stroke-dashoffset:0}}
 .fin-particle{position:fixed;z-index:12040;width:7px;height:7px;border-radius:50%;pointer-events:none;will-change:transform,opacity}
 
+/* 完成一件任务的脉冲圈（从勾选框位置扩散） */
+.fin-donering{position:fixed;z-index:12040;width:26px;height:26px;border-radius:50%;
+ border:2px solid var(--brand);pointer-events:none;will-change:transform,opacity}
+
 /* ---------- 2. 勾选联动 ---------- */
 .topbar{position:relative}
 .fin-flashlayer{position:absolute;inset:0;pointer-events:none;opacity:0;z-index:0;
@@ -75,5 +79,5 @@
 /* ---------- 无障碍：降低动效 ---------- */
 @media (prefers-reduced-motion:reduce){
  *{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
- .fin-particle{display:none!important}
+ .fin-particle,.fin-donering{display:none!important}
 }
