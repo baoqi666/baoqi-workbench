@@ -22,19 +22,22 @@
   var w = weekStats();
   var m = Store.fitMonthMinutes();
   var today = Store.fitLogs().length;
+  var remain = Math.max(0, w.target - w.count);
   return '' +
-   '<div class="card">' +
-    '<div class="sec-title"><h2><span class="bar-mark"></span>训练概览</h2>' +
-     '<span class="more">' + Store.monday(Store.today()).slice(5) + ' 起本周</span></div>' +
-    '<div class="row" style="gap:16px">' +
-     UI.donut(w.pct, { size: 96, stroke: 11, text: w.pct + '%', fontSize: 19, c1: '#69db7c', c2: '#b2f2bb' }) +
-     '<div class="grow">' +
-      '<div class="row" style="justify-content:space-between;font-size:var(--fs-3);margin-bottom:6px"><span class="muted">本周完成</span><b>' + w.count + ' / ' + w.target + ' 次</b></div>' +
-      '<div class="row" style="justify-content:space-between;font-size:var(--fs-3);margin-bottom:6px"><span class="muted">本周时长</span><b style="color:#2c9a70">' + UI.fmtMin(w.minutes) + '</b></div>' +
-      '<div class="row" style="justify-content:space-between;font-size:var(--fs-3);margin-bottom:6px"><span class="muted">本月累计</span><b>' + m.count + ' 次 · ' + UI.fmtMin(m.minutes) + '</b></div>' +
-      '<div class="row" style="justify-content:space-between;font-size:var(--fs-3)"><span class="muted">今日已打卡</span><b>' + today + ' 项</b></div>' +
+   '<div class="read-hero">' +
+    '<div class="rh-card">' +
+     '<div class="donut-wrap">' + UI.donut(w.pct, { size: 96, stroke: 11, text: w.pct + '%', fontSize: 19, c1: '#69db7c', c2: '#b2f2bb' }) + '</div>' +
+     '<div class="rh-big">' +
+      '<div class="k">本周完成度</div>' +
+      '<div class="v">' + w.count + '<small> / ' + w.target + ' 次</small></div>' +
+      '<div class="sub">本周时长 <b>' + UI.fmtMin(w.minutes) + '</b> · 还差 <b>' + remain + '</b> 次达标</div>' +
      '</div>' +
     '</div>' +
+   '</div>' +
+   '<div class="stat-grid compact" style="margin-bottom:14px">' +
+    '<div class="stat-card"><div class="ic">' + Icons.cat('fitness', { radius: 12 }) + '</div><div class="num">' + m.count + '<small>次</small></div><div class="lb">本月累计</div></div>' +
+    '<div class="stat-card"><div class="ic">' + Icons.cat('timer', { radius: 12 }) + '</div><div class="num">' + UI.fmtMinShort(m.minutes) + '</div><div class="lb">本月时长</div></div>' +
+    '<div class="stat-card"><div class="ic">' + Icons.cat('plan', { radius: 12 }) + '</div><div class="num">' + today + '<small>项</small></div><div class="lb">今日已打卡</div></div>' +
    '</div>';
  }
 
@@ -80,7 +83,7 @@
    }
    data.push({ label: w === 0 ? '本周' : w + '周前', value: m, hi: w === 0 });
   }
-  return '<div class="card"><div class="sec-title"><h2><span class="bar-mark"></span>近 4 周训练时长（分钟）</h2></div>' +
+  return '<div class="frame"><div class="ttl">近 4 周训练时长（分钟）</div>' +
    UI.barChart(data, { height: 108 }) + '</div>';
  }
 
@@ -188,7 +191,7 @@
 
  function render() {
   var presets = Store.state.fitness.presets;
-  return '<div class="fade-in">' +
+  return '<div class="fade-in pg-read">' +
    overview() +
    unfinished() +
    '<div class="chips" style="margin:2px 2px 12px">' +
@@ -199,11 +202,11 @@
    (scope === 'day'
     ? '<div class="card"><div class="sec-title"><h2><span class="bar-mark"></span>今日训练记录</h2>' +
      '<button class="pill-btn plain" id="customLog">+ 自定义</button></div>' + todayList() + '</div>' +
-     '<div class="group-head"><b>一键套用预设计划</b><span>· 点 ✓ 直接打卡</span></div>' +
+     '<div class="sec-label">一键套用预设计划 · 点 ✓ 直接打卡</div>' +
      presets.map(presetItem).join('')
     : '') +
    (scope === 'week'
-    ? '<div class="group-head"><b>本周计划完成度</b><span>· 周一至周日</span></div>' +
+    ? '<div class="sec-label">本周计划完成度 · 周一至周日</div>' +
      presets.map(presetItem).join('') +
      '<button class="pill-btn plain" id="addPreset" style="width:100%;height:44px;justify-content:center;margin-top:4px">+ 新增运动板块</button>'
     : '') +
