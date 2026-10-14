@@ -26,33 +26,29 @@
  /* ---------------- 列表视图 ---------------- */
  function liveCard(live, alreadyArchived) {
   var chart = UI.barChart(live.daily.map(function (x) { return { label: x.label, value: x.value }; }), { height: 110 });
-  return '<div class="card">' +
-   '<div class="sec-title"><h2><span class="bar-mark"></span>本周进行中</h2>' +
-    '<span class="more">' + esc(live.range) + '</span></div>' +
-   '<div class="muted" style="margin:-4px 0 12px">每天数据自动累计，进入下一周时会自动归档成一篇周总结</div>' +
-   '<div class="stat-grid">' +
-    statCard('timer', UI.fmtMinShort(live.focusMin), '专注时长') +
-    statCard('plan', live.done + '<small>/' + live.taskTotal + '</small>', '完成任务') +
-    statCard('timer', live.pomos + '<small>个</small>', '番茄数') +
-    statCard('fitness', live.fitCount + '<small>次</small>', '运动打卡') +
+  var fh = Math.round(live.focusMin / 60 * 10) / 10;
+  return '<div class="read-hero">' +
+   '<div class="rh-card">' +
+    '<div class="rh-big">' +
+     '<div class="k">本周专注时长</div>' +
+     '<div class="v">' + fh + '<small>h</small></div>' +
+     '<div class="sub">任务完成 <b>' + live.done + '/' + live.taskTotal + '</b> · 番茄 <b>' + live.pomos + '</b> 个 · 运动 <b>' + live.fitCount + '</b> 次</div>' +
+    '</div>' +
    '</div>' +
+  '</div>' +
+  '<div class="frame">' +
+   '<div class="ttl">每日专注分布（分钟）<span class="m">' + esc(live.range) + '</span></div>' +
    chart +
-   '<button class="pill-btn plain" id="liveGen" style="width:100%;justify-content:center;margin-top:12px">' +
-    (alreadyArchived ? '本周已存档 · 点此重新生成' : '生成本周总结（存档）') + '</button>' +
-  '</div>';
+  '</div>' +
+  '<button class="pill-btn plain" id="liveGen" style="width:100%;justify-content:center;margin-bottom:14px">' +
+   (alreadyArchived ? '本周已存档 · 点此重新生成' : '生成本周总结（存档）') + '</button>';
  }
  function sumItem(s) {
-  var chip = '<div class="chips" style="margin-top:8px">' +
-   '<span class="chip">专注 ' + UI.fmtMin(s.focusMin) + '</span>' +
-   '<span class="chip">任务 ' + s.done + '/' + s.taskTotal + '</span>' +
-   '<span class="chip">运动 ' + s.fitCount + ' 次</span>' +
-   (s.note ? '<span class="chip">有手记</span>' : '') +
-  '</div>';
-  return '<div class="review-item" data-id="' + s.id + '">' +
-   '<h4><span>' + esc(s.range) + '</span><span class="tag blue">周总结</span></h4>' +
-   '<p>' + esc(s.tagline) + '</p>' + chip +
-   '<div class="muted" style="font-size:var(--fs-4);margin-top:8px">' + humanWeek(s.week) + ' · ' +
-    new Date(s.generatedAt).toLocaleDateString('zh-CN') + ' 生成</div>' +
+  return '<div class="li" data-id="' + s.id + '">' +
+   '<span class="nm">' + esc(s.range) +
+    '<small>' + humanWeek(s.week) + ' · 专注 ' + UI.fmtMin(s.focusMin) + ' · 任务 ' + s.done + '/' + s.taskTotal + (s.note ? ' · 有手记' : '') + '</small>' +
+   '</span>' +
+   '<b>查看 ›</b>' +
   '</div>';
  }
  function listView() {
@@ -60,10 +56,10 @@
   var live = Store.genWeekStats(thisMon);
   var alreadyArchived = stateSummaries().some(function (x) { return x.week === live.week; });
   var sums = stateSummaries().slice().sort(function (a, b) { return a.week < b.week ? 1 : -1; });
-  return '<div class="fade-in">' +
+  return '<div class="fade-in pg-read">' +
    liveCard(live, alreadyArchived) +
-   '<div class="sec-title"><h2><span class="bar-mark"></span>历史周总结</h2><span class="more">共 ' + sums.length + ' 篇</span></div>' +
-   (sums.length ? sums.map(sumItem).join('') : UI.emptyBox('还没有存档的周总结。继续记录几天，进入下一周时会自动生成第一篇 ')) +
+   '<div class="sec-label">历史周总结 · 共 ' + sums.length + ' 篇</div>' +
+   (sums.length ? '<div class="naked-list">' + sums.map(sumItem).join('') + '</div>' : UI.emptyBox('还没有存档的周总结。继续记录几天，进入下一周时会自动生成第一篇 ')) +
    (sums.length ? '<button class="link-act" id="backfill">补全更早的历史周总结</button>' : '') +
    '<div style="height:56px"></div></div>' +
    '<button class="fab" id="genNow" title="生成本周总结"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>';
@@ -114,7 +110,7 @@
    '<div class="field"><textarea id="sumNote" placeholder="给这一周写几句感想，存档后随时可回看">' + esc(s.note || '') + '</textarea></div>' +
    '<button class="pill-btn plain" id="saveNote" style="width:100%;justify-content:center;margin-top:10px">保存手记</button></div>';
 
-  return '<div class="fade-in">' +
+  return '<div class="fade-in pg-read">' +
    '<div class="card">' +
     '<div class="row" style="margin-bottom:6px">' +
      '<button class="mini-act" id="backList"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg></button>' +
@@ -180,7 +176,7 @@
    UI.toast(n ? ('已补全 ' + n + ' 篇周总结') : '没有可补全的历史周');
    refresh();
   };
-  UI.$$('.review-item[data-id]', root).forEach(function (el) {
+  UI.$$('.naked-list .li[data-id]', root).forEach(function (el) {
    el.onclick = function () { viewing = el.dataset.id; refresh(); UI.$('#view').scrollTop = 0; };
   });
  }
