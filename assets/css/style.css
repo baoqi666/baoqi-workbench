@@ -1036,8 +1036,10 @@ input,textarea,select{outline:none}
 .home-block > .streak-card .streak-days{margin-top:18px}
 /* 组 C：图表去掉白卡片框。白框变稀缺，有框的那几张自动成为重点 ——
    全页白框由 6 个降到 3 个 */
+/* 去框后压在壁纸上文字会糊：垫一层极淡的透明白（不恢复卡片框、无角无影），
+   既托起文字、又只在壁纸场景下才被看见，白底页里几乎无感 */
 .home-block.plain > .card{
- background:transparent;border-color:transparent;box-shadow:none;padding:0 20px;
+ background:rgba(255,255,255,.5);border-color:transparent;box-shadow:none;padding:0 20px;
  -webkit-backdrop-filter:none;backdrop-filter:none;
 }
 
@@ -1066,13 +1068,14 @@ input,textarea,select{outline:none}
 .pg-operate .card{margin-bottom:10px}
 .pg-operate .sec-title{margin-top:24px;margin-bottom:10px}
 .pg-operate > .sec-title:first-child{margin-top:0}
-/* 列表行去框：背景、描边、投影、磨砂全撤，只留一条极淡的分隔线 */
+/* 列表行去框：描边、投影、磨砂全撤，只留一条极淡的分隔线；
+   但垫一层极淡透明白（不恢复卡片框、无角无影），避免裸压在壁纸上文字糊 */
 .pg-operate .task-item,
 .pg-operate .step-item,
 .pg-operate .idea-item,
 .pg-operate .reward-row,
 .pg-operate .fund-card{
- background:transparent;border:none;box-shadow:none;border-radius:0;margin-bottom:0;
+ background:rgba(255,255,255,.5);border:none;box-shadow:none;border-radius:0;margin-bottom:0;
  padding:13px 2px;border-bottom:1px solid var(--line-2);
  -webkit-backdrop-filter:none;backdrop-filter:none;
 }
