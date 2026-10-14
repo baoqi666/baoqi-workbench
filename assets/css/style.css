@@ -208,7 +208,7 @@ input,textarea,select{outline:none}
 .pill-btn:active{transform:scale(.95)}
 
 .view{
- flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
+ flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;
  padding:16px 16px calc(48px + var(--safe-b));
 }
 .view::-webkit-scrollbar{width:0}
@@ -1101,3 +1101,62 @@ input,textarea,select{outline:none}
 .pg-operate .energy-head{padding:14px 16px}
 .pg-operate .energy-head .eh-left .n{font-size:var(--fs-1)}
 .pg-operate .timer-card{padding:24px 20px;margin-top:14px}
+
+/* ==========================================================
+  阅读型页面（周总结 / 健身 / 健康 / 复盘）
+  进这些页是为了看数据，不是为了干活 —— 所以：
+  ① 主角块 read-hero：数字 / 图表最大（与操作型「白框稀缺、主角更高」相反）
+  ② 图表 / 月历放进 .frame 白框，白框稀缺成重点（全页 2~3 个）
+  ③ 次要列表去框裸行 naked-list（垫极淡透明白，避免压壁纸糊、不恢复卡片框）
+  ④ 统计非等宽：复用 .stat-grid.compact（1.45fr 1fr 1fr）
+  ========================================================== */
+.pg-read .read-hero{margin-bottom:14px}
+.pg-read .read-hero .rh-card{
+ background:var(--card);border-radius:var(--r-l);box-shadow:var(--shadow-card);
+ padding:20px;border:1px solid var(--edge-ink);display:flex;gap:16px;align-items:center;
+}
+.pg-read .read-hero .rh-big{flex:1;min-width:0}
+.pg-read .read-hero .rh-big .k{font-size:13px;color:var(--ink-2);margin-bottom:4px}
+.pg-read .read-hero .rh-big .v{font-size:34px;font-weight:800;line-height:1.05;color:var(--ink);font-variant-numeric:tabular-nums}
+.pg-read .read-hero .rh-big .v small{font-size:15px;font-weight:600;color:var(--ink-2)}
+.pg-read .read-hero .rh-big .sub{font-size:12px;color:var(--ink-3);margin-top:6px;line-height:1.5}
+.pg-read .read-hero .rh-big .sub b{color:var(--ink-2);font-weight:600}
+.pg-read .donut-wrap{position:relative;flex:none}
+.pg-read .donut-wrap .dt{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:800;color:var(--ink);font-variant-numeric:tabular-nums}
+/* 小标题：阅读型用轻量 sec-label（不抢主角），替代厚重的 sec-title */
+.pg-read .sec-label{font-size:12px;color:var(--ink-lb);font-weight:600;margin:18px 2px 8px;letter-spacing:.02em}
+/* 白框：图表 / 月历的归属 —— 有框的那几块自动成为重点 */
+.pg-read .frame{
+ background:var(--card);border-radius:var(--r-l);box-shadow:var(--shadow-card);
+ padding:16px;border:1px solid var(--edge-ink);margin-bottom:14px;
+}
+.pg-read .frame .ttl{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+.pg-read .frame .ttl .m{font-size:12px;color:var(--ink-3);font-weight:400}
+/* 去框裸行：列表行垫极淡透明白（不恢复卡片框、无角无影），只壁纸场景托起文字 */
+.pg-read .naked-list .li{
+ padding:13px 2px;border-bottom:1px solid var(--line-2);
+ display:flex;justify-content:space-between;align-items:center;
+ background:rgba(255,255,255,.5);
+ -webkit-backdrop-filter:none;backdrop-filter:none;
+}
+.pg-read .naked-list .li:last-child{border-bottom:none}
+.pg-read .naked-list .li .nm{font-size:14px;color:var(--ink);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pg-read .naked-list .li .nm small{display:block;font-size:12px;color:var(--ink-3);font-weight:400;margin-top:2px}
+.pg-read .naked-list .li .mt{font-size:12px;color:var(--ink-3)}
+.pg-read .naked-list .li b{font-size:14px;color:var(--ink);font-variant-numeric:tabular-nums}
+/* 运动 / 健康：把原有 .fit-item / .meal-item 列表行去框（保留内部布局与交互钩子） */
+.pg-read .fit-item,
+.pg-read .meal-item{
+ background:rgba(255,255,255,.5);border:none;box-shadow:none;border-radius:0;margin-bottom:0;
+ padding:13px 2px;border-bottom:1px solid var(--line-2);
+ -webkit-backdrop-filter:none;backdrop-filter:none;
+}
+.pg-read .fit-item:last-child,
+.pg-read .meal-item:last-child{border-bottom:none}
+/* 复盘：本周数据自动汇总改成胶囊（wk-summary），不再占整张卡片 */
+.pg-read .wk-summary{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px}
+.pg-read .wk-summary .chip{
+ font-size:12px;color:var(--ink-2);background:var(--card-2);border:1px solid var(--line);
+ padding:4px 10px;border-radius:var(--r-pill);
+}
+.pg-read .wk-summary .chip b{color:var(--brand-ink);font-weight:700}
