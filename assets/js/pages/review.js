@@ -76,16 +76,14 @@
  }
  function summaryCard(dateStr) {
   var s = weekSummary(dateStr);
-  return '<div class="card tight">' +
-   '<b style="font-size:var(--fs-3)">本周数据自动汇总（供复盘参考）</b>' +
-   '<div class="chips" style="margin-top:9px">' +
-    '<span class="chip">专注 ' + UI.fmtMin(s.focus) + '</span>' +
-    '<span class="chip">番茄 ' + s.pomos + ' 个</span>' +
-    '<span class="chip">完成任务 ' + s.done + ' 项</span>' +
-    '<span class="chip">运动 ' + s.fit + ' 次 / ' + s.fitMin + ' 分</span>' +
-    '<span class="chip">饮水 ' + s.water + ' 杯</span>' +
-    '<span class="chip">睡眠记录 ' + s.sleepDays + ' 天</span>' +
-   '</div></div>';
+  return '<div class="wk-summary">' +
+   '<span class="chip">专注 <b>' + UI.fmtMin(s.focus) + '</b></span>' +
+   '<span class="chip">番茄 <b>' + s.pomos + '</b> 个</span>' +
+   '<span class="chip">完成任务 <b>' + s.done + '</b> 项</span>' +
+   '<span class="chip">运动 <b>' + s.fit + '</b> 次</span>' +
+   '<span class="chip">饮水 <b>' + s.water + '</b> 杯</span>' +
+   '<span class="chip">睡眠 <b>' + s.sleepDays + '</b> 天</span>' +
+   '</div>';
  }
 
  /* ---------------- 复盘编辑（支持 日/周/月，可附图片） ---------------- */
@@ -226,7 +224,7 @@
     (mood ? '<span class="cal-mood" title="心情 · ' + (MOODS[mood] || '') + '">' + Icons.mood(mood) + '</span>' : '') +
     (has ? '<i class="cal-dot"></i>' : '') + '</div>';
   }).join('');
-  return '<div class="fade-in">' +
+  return '<div class="fade-in pg-read">' +
    tabs('calendar') +
    '<div class="card tight cal-nav">' +
     '<button class="mini-act" data-navm="-1"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg></button>' +
@@ -269,7 +267,7 @@
   var tpct = tasks.length ? Math.round(doneN / tasks.length * 100) : 0;
   var todos = Store.sortedTodos(date);
   var revs = Store.state.reviews.filter(function (r) { return r.date === date; });
-  return '<div class="fade-in">' +
+  return '<div class="fade-in pg-read">' +
    '<div class="card tight row" style="margin-bottom:14px">' +
     '<button class="mini-act" id="backCal"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg></button>' +
     '<div class="grow" style="margin-left:8px"><b style="font-size:var(--fs-2)">' + date.slice(5).replace('-', '/') + '</b>' +
@@ -313,10 +311,11 @@
  }
  function reviewListView() {
   var list = Store.state.reviews;
-  return '<div class="fade-in">' +
+  return '<div class="fade-in pg-read">' +
    tabs('week') +
+   '<div class="sec-label">本周数据自动汇总（供复盘参考）</div>' +
    summaryCard() +
-   '<div class="sec-title"><h2><span class="bar-mark"></span>复盘归档</h2><span class="more">共 ' + list.length + ' 份</span></div>' +
+   '<div class="sec-label">复盘归档 · 共 ' + list.length + ' 份</div>' +
    (list.length ? list.map(revItem).join('') : UI.emptyBox('还没有复盘记录，点右下角开始第一份')) +
    '<div style="height:56px"></div></div>' +
    '<button class="fab" id="addReview"><svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>';
@@ -324,7 +323,7 @@
 
  function detailView(r) {
   var fields = fieldsFor(r.type);
-  return '<div class="fade-in">' +
+  return '<div class="fade-in pg-read">' +
    '<div class="card">' +
     '<div class="row" style="margin-bottom:6px">' +
      '<button class="mini-act" id="backList"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M15 5l-7 7 7 7"/></svg></button>' +
