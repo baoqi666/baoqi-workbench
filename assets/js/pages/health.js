@@ -265,7 +265,7 @@
      '<div class="muted" style="font-size:var(--fs-3);margin-top:5px;line-height:1.55">' + esc(c.health || '') + '</div></div>' +
     '<div style="flex:none;font-size:var(--fs-4);color:var(--brand);white-space:nowrap">每日更新</div>' +
    '</div></div>';
-  return '<div class="fade-in">' + tipCard + sleepCard() + waterCard() + foodCard() +
+  return '<div class="fade-in pg-read">' + tipCard + sleepCard() + waterCard() + foodCard() +
    '<div style="height:12px"></div></div>';
  }
 
