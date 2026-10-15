@@ -249,8 +249,14 @@ input,textarea,select{outline:none}
 .nav-item{
  display:flex;align-items:center;gap:12px;
  padding:9px 11px;border-radius:var(--r-m);margin-bottom:5px;
- transition:background .2s ease;width:100%;text-align:left;
+ transition:background .2s ease;width:100%;text-align:left;position:relative;
 }
+.nav-item .grab{display:none;flex:none;color:var(--ink-3);font-size:15px;line-height:1}
+.nav-list li.dragging{list-style:none}
+.nav-list li.dragging>.nav-item{display:flex;align-items:center;gap:12px;z-index:5;background:#fff;
+ box-shadow:0 10px 24px -8px rgba(50,40,18,.30);border-radius:var(--r-m);will-change:transform}
+.nav-list li.dragging .grab{display:inline-block;opacity:.55}
+.nav-list.reordering{touch-action:none;user-select:none;-webkit-user-select:none}
 .nav-item .ic{width:36px;height:36px;border-radius:var(--r-s);overflow:hidden;flex:none;border:1px solid var(--line)}
 .nav-item .ic svg{width:100%;height:100%;display:block}
 .nav-item .tx{flex:1;min-width:0}
