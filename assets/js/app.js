@@ -8,6 +8,8 @@
  var entered = false;
  var fgHandle = null;    // 专注启动台的定时器监听
  var fgTask = '';        // 启动台上选中的今日计划项
+ var _fabTimer = null;   // FAB 滑动隐藏的停滑恢复定时器
+ var _fabLastTop = 0;    // 上一次滚动位置，用于判断方向
 
  /* ---------------- 开屏 ---------------- */
  function dayHash(s) {
@@ -887,6 +889,9 @@ function sessionSheet(info) {
   view.innerHTML = page.render();
   view.scrollTop = 0;
   page.mount(view);
+  view.classList.remove('fab-hide');
+  view.classList.toggle('has-fab', !!view.querySelector('.fab'));
+  _fabLastTop = 0;
   $$('[data-go]').forEach(function (b) {
    b.classList.toggle('active', b.dataset.go === key);
   });
@@ -894,17 +899,30 @@ function sessionSheet(info) {
   syncChrome();
  }
 
+ function mtPillHTML(t) {
+  var c = (2 * Math.PI * 9).toFixed(1);
+  return '<button type="button" class="mt-pill" id="mtPill" aria-label="查看番茄钟">' +
+   '<svg class="mt-ring" viewBox="0 0 20 20" width="18" height="18">' +
+    '<circle cx="10" cy="10" r="9" fill="none" stroke="rgba(127,184,245,.32)" stroke-width="3"></circle>' +
+    '<circle id="mtProgress" cx="10" cy="10" r="9" fill="none" stroke="var(--brand-ink)" stroke-width="3" stroke-linecap="round" stroke-dasharray="' + c + '" stroke-dashoffset="0" transform="rotate(-90 10 10)"></circle>' +
+   '</svg>' +
+   '<span class="mt-text" id="mtText">' + t.text + '</span>' +
+  '</button>';
+ }
+
  function renderTopRight(key) {
   var box = $('#topbarRight');
   var td = Store.today();
+  var html = '';
   if (key === 'plan') {
    var e = Store.energyOf(td);
-   box.innerHTML = '<span class="tag blue" style="padding:6px 10px;font-size:var(--fs-4)">精力 ' + e.left + '</span>';
+   html = '<span class="tag blue" style="padding:6px 10px;font-size:var(--fs-4)">精力 ' + e.left + '</span>';
   } else if (key === 'home') {
-   box.innerHTML = '<span class="tag pink" style="padding:6px 10px;font-size:var(--fs-4)">连续 ' + Store.state.streak.count + ' 天</span>';
-  } else {
-   box.innerHTML = '';
+   html = '<span class="tag pink" style="padding:6px 10px;font-size:var(--fs-4)">连续 ' + Store.state.streak.count + ' 天</span>';
   }
+  var t = Timer.get();
+  if (t.running && key !== 'plan') html += mtPillHTML(t);
+  box.innerHTML = html;
  }
 
  /* ---------------- 全局同步 ---------------- */
@@ -918,16 +936,20 @@ function sessionSheet(info) {
  }
 
  function syncMini(t) {
-  var el = $('#miniTimer');
-  if (!el) return;
+  var box = $('#topbarRight');
+  if (!box) return;
+  var pill = $('#mtPill');
   var show = t.running && current !== 'plan';
-  el.hidden = !show;
-  if (show) {
-   $('#mtText').textContent = t.text;
-   var c = 2 * Math.PI * 19;
-   $('#mtProgress').setAttribute('stroke-dasharray', c.toFixed(1));
-   $('#mtProgress').setAttribute('stroke-dashoffset', (c * (1 - t.pct)).toFixed(1));
+  if (!show) { if (pill) pill.remove(); return; }
+  if (!pill) {
+   box.insertAdjacentHTML('beforeend', mtPillHTML(t));
+   pill = $('#mtPill');
   }
+  $('#mtText').textContent = t.text;
+  var c = 2 * Math.PI * 9;
+  var p = $('#mtProgress');
+  p.setAttribute('stroke-dasharray', c.toFixed(1));
+  p.setAttribute('stroke-dashoffset', (c * (1 - t.pct)).toFixed(1));
  }
 
  /* ---------------- 启动 ---------------- */
@@ -947,7 +969,27 @@ function sessionSheet(info) {
    if (info && info.natural && !info.late && global.Push && Push.notifyFocusEnd) Push.notifyFocusEnd();
    sessionSheet(info);
   });                                  // 到点：收起启动台 → 提示 + 补录层
-  $('#miniTimer').onclick = function () { go('plan'); };
+  // 顶栏倒计时药丸 → 点击进入计划页查看番茄钟
+  $('#topbarRight').addEventListener('click', function (e) {
+   if (e.target.closest && e.target.closest('#mtPill')) go('plan');
+  });
+
+  // 悬浮「+」滑动感知：向下滑浏览时淡出，停滑/上滑时回来
+  var _view = $('#view');
+  _view.addEventListener('scroll', function () {
+   var top = _view.scrollTop;
+   var dy = top - _fabLastTop;
+   _fabLastTop = top;
+   if (top <= 8) {
+    _view.classList.remove('fab-hide');
+   } else if (dy > 6) {
+    _view.classList.add('fab-hide');
+   } else if (dy < -6) {
+    _view.classList.remove('fab-hide');
+   }
+   clearTimeout(_fabTimer);
+   _fabTimer = setTimeout(function () { _view.classList.remove('fab-hide'); }, 700);
+  }, { passive: true });
 
   // 首次打开提示：每人自动获得独立副本（数据仅存本地，与分享者互不可见）
   if (!localStorage.getItem('catdesk_tpl_hint')) {
