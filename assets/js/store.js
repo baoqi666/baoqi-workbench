@@ -78,6 +78,7 @@
    budgets: {},
    summaries: [],
    mood: {},   // 心情记录：{ 'YYYY-MM-DD': 'le' } 喜怒哀乐忧
+   navOrder: [], // 导航栏自定义顺序（路由 key 数组）；空 = 使用默认 ROUTES
    seeded: false
   };
  }
