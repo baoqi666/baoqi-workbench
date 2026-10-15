@@ -599,7 +599,7 @@ function sessionSheet(info) {
   var list = $('#navList');
   if (!list || list._navBound) return;
   list._navBound = true;
-  var LONG_MS = 350, MOVE_CANCEL = 10;
+  var LONG_MS = 350, MOVE_CANCEL = 24;
   var row = null, pressKey = '', startX = 0, startY = 0, longTimer = null;
   var dragging = false, pid = null, downY = 0, scaleOn = !matchMedia('(prefers-reduced-motion: reduce)').matches;
   var hinted = false;
