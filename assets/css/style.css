@@ -476,19 +476,26 @@ input,textarea,select{outline:none}
  width:54px;height:54px;border-radius:var(--r-l);display:grid;place-items:center;
  background:var(--brand);color:#fff;
  box-shadow:var(--shadow);
+ transition:opacity .26s ease, transform .26s ease;
 }
 .fab:active{transform:scale(.93)}
 
-/* 迷你计时器 */
-.mini-timer{
- position:absolute;right:16px;bottom:calc(88px + var(--safe-b));z-index:31;
- width:60px;height:60px;border-radius:50%;
- display:grid;place-items:center;
- background:var(--brand);
- box-shadow:var(--shadow);
+/* 顶栏倒计时药丸（运行中番茄钟） */
+.mt-pill{
+ -webkit-appearance:none;appearance:none;font-family:inherit;cursor:pointer;
+ display:inline-flex;align-items:center;gap:5px;
+ padding:4px 9px 4px 5px;border-radius:var(--r-pill);
+ background:rgba(127,184,245,.16);border:1px solid rgba(127,184,245,.28);
+ color:var(--brand-ink);
+ font-size:var(--fs-4);font-weight:800;line-height:1;font-variant-numeric:tabular-nums;
 }
-.mini-timer .mt-ring{position:absolute;inset:8px;width:44px;height:44px}
-.mini-timer .mt-text{position:relative;font-size:var(--fs-4);font-weight:800;color:#fff;font-variant-numeric:tabular-nums}
+.mt-pill .mt-ring{width:18px;height:18px;flex:none}
+.mt-pill .mt-text{position:relative}
+
+/* 悬浮「+」：滑动浏览时隐藏，停滑 / 上滑时回来 */
+.view.fab-hide .fab{opacity:0;transform:translateY(120px);pointer-events:none}
+.view.has-fab{padding-bottom:calc(84px + var(--safe-b))}
+@media (prefers-reduced-motion:reduce){.fab{transition:none}.view.fab-hide .fab{transition:none}}
 
 /* ==========================================================
   表单 / 弹层
