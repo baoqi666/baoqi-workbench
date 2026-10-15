@@ -4,12 +4,25 @@
 (function (global) {
  var $ = UI.$, $$ = UI.$$;
  var ROUTES = ['home', 'plan', 'ideas', 'express', 'dream', 'reward', 'health', 'fitness', 'review', 'weeksum'];
+ /* 导航栏自定义顺序：校验合法（与 ROUTES 同集合）才用，否则回退默认 */
+ function getNavOrder() {
+  var saved = (Store.state && Store.state.navOrder) || [];
+  if (saved.length === ROUTES.length && saved.every(function (k) { return ROUTES.indexOf(k) !== -1; })) {
+   return saved.slice();
+  }
+  return ROUTES.slice();
+ }
+ function setNavOrder(arr) {
+  Store.state.navOrder = arr.slice();
+  Store.save();
+ }
  var current = null;
  var entered = false;
  var fgHandle = null;    // 专注启动台的定时器监听
  var fgTask = '';        // 启动台上选中的今日计划项
  var _fabTimer = null;   // FAB 滑动隐藏的停滑恢复定时器
  var _fabLastTop = 0;    // 上一次滚动位置，用于判断方向
+ var navSuppressClick = false; // 拖拽结束后吞掉一次误触跳转
 
  /* ---------------- 开屏 ---------------- */
  function dayHash(s) {
@@ -581,22 +594,119 @@ function sessionSheet(info) {
   };
  }
 
+ /* 长按抓取 + 拖动重排导航顺序（拖拽 ↔ 滚动锁 配对处理） */
+ function initNavReorder() {
+  var list = $('#navList');
+  if (!list || list._navBound) return;
+  list._navBound = true;
+  var LONG_MS = 350, MOVE_CANCEL = 10;
+  var row = null, pressKey = '', startX = 0, startY = 0, longTimer = null;
+  var dragging = false, pid = null, downY = 0, scaleOn = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var hinted = false;
+
+  function clearLong() { if (longTimer) { clearTimeout(longTimer); longTimer = null; } }
+
+  function afterRow(y) {
+   var btns = $$('.nav-item', list), closest = { off: -Infinity, el: null };
+   btns.forEach(function (b) {
+    var r = b.parentElement;
+    if (r.classList.contains('dragging')) return;
+    var box = r.getBoundingClientRect(), off = y - box.top - box.height / 2;
+    if (off < 0 && off > closest.off) closest = { off: off, el: r };
+   });
+   return closest.el;
+  }
+
+  function beginDrag(e) {
+   dragging = true; pid = e.pointerId; row.classList.add('dragging');
+   try { row.setPointerCapture(pid); } catch (x) {}
+   list.classList.add('reordering');
+   downY = e.clientY;
+   if (!hinted) { hinted = true; UI.toast('拖动排序，松手保存'); }
+  }
+
+  function moveDrag(e) {
+   if (!dragging) return;
+   var dy = e.clientY - downY;
+   var cur = row.getBoundingClientRect().top;               // 当前视觉顶（含 transform）
+   row.style.transform = 'translateY(' + dy + 'px)' + (scaleOn ? ' scale(1.03)' : '');
+   var ref = afterRow(e.clientY);
+   if (ref !== row.nextSibling) {                            // 跨过中点 → 实时换位
+    if (ref == null) list.appendChild(row); else list.insertBefore(row, ref);
+    row.style.transform = '';
+    var newTop = row.getBoundingClientRect().top;            // 新槽位（无 transform）
+    var adj = cur - newTop;                                  // 维持手指处视觉不动
+    row.style.transform = 'translateY(' + adj + 'px)' + (scaleOn ? ' scale(1.03)' : '');
+    downY = e.clientY - adj;                                 // 续接基准，避免跳变
+   }
+   e.preventDefault();
+  }
+
+  function endDrag(e) {
+   clearLong();
+   if (!dragging) { row = null; return; }
+   dragging = false;
+   try { row.releasePointerCapture(pid); } catch (x) {}
+   list.classList.remove('reordering');
+   row.style.transform = '';
+   row.classList.remove('dragging');
+   var order = $$('.nav-item', list).map(function (b) { return b.dataset.go; });
+   if (order.join(',') !== getNavOrder().join(',')) setNavOrder(order);
+   navSuppressClick = true;                                  // 吞掉本次松手可能触发的 click
+   row = null;
+   if (e && e.preventDefault) e.preventDefault();
+  }
+
+  list.addEventListener('pointerdown', function (e) {
+   var el = e.target.closest && e.target.closest('.nav-item');
+   if (!el || (e.button && e.button !== 0)) return;
+   row = el.parentElement; pressKey = el.dataset.go; startX = e.clientX; startY = e.clientY;
+   clearLong();
+   longTimer = setTimeout(function () { beginDrag(e); }, LONG_MS);
+  });
+  list.addEventListener('pointermove', function (e) {
+   if (!row) return;
+   if (!dragging) {
+    if (Math.abs(e.clientX - startX) > MOVE_CANCEL || Math.abs(e.clientY - startY) > MOVE_CANCEL) clearLong();
+    return;
+   }
+   moveDrag(e);
+  });
+  list.addEventListener('pointerup', function (e) { if (row) endDrag(e); });
+  list.addEventListener('pointercancel', function (e) { if (row) endDrag(e); });
+  list.addEventListener('contextmenu', function (e) { if (dragging || longTimer) e.preventDefault(); });
+ }
+
  /* ---------------- 抽屉 ---------------- */
  function buildDrawer() {
   $('#drawerAvatar').innerHTML = Icons.cat('home');
-  $('#navList').innerHTML = ROUTES.map(function (k) {
+  $('#navList').innerHTML = getNavOrder().map(function (k) {
    var p = Pages[k];
    return '<li><button class="nav-item" data-go="' + k + '">' +
+    '<span class="grab" aria-hidden="true">⠿</span>' +
     '<span class="ic">' + Icons.cat(p.icon) + '</span>' +
     '<span class="tx"><b>' + UI.esc(p.name) + '</b><span>' + UI.esc(p.sub) + '</span></span>' +
     '</button></li>';
   }).join('');
   $$('[data-go]').forEach(function (b) {
-   b.onclick = function () { go(b.dataset.go); closeDrawer(); };
+   b.onclick = function () {
+    if (navSuppressClick) { navSuppressClick = false; return; } // 拖拽结束后吞掉误触跳转
+    go(b.dataset.go); closeDrawer();
+   };
   });
+  initNavReorder();
   $('#menuBtn').onclick = openDrawer;
   $('#drawerClose').onclick = closeDrawer;
   $('#drawerMask').onclick = closeDrawer;
+  var resetNavBtn = $('#resetNavBtn');
+  if (resetNavBtn) resetNavBtn.onclick = function () {
+   setNavOrder(ROUTES.slice());
+   buildDrawer();
+   if (current) {
+    $$('[data-go]').forEach(function (b) { b.classList.toggle('active', b.dataset.go === current); });
+   }
+   UI.toast('已恢复默认顺序');
+  };
   $('#resetBtn').onclick = function () {
    closeDrawer();
    setTimeout(function () {
