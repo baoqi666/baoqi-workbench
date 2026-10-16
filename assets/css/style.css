@@ -265,7 +265,7 @@ input,textarea,select{outline:none}
 .nav-item .tx span{font-size:var(--fs-4);color:var(--ink-3)}
 .nav-item.active{background:var(--brand-soft)}
 .nav-item:active{background:var(--line-2)}
-.drawer-foot{padding:10px 18px 0;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--line)}
+.drawer-foot{padding:12px 18px 8px;display:flex;flex-direction:column;align-items:stretch;gap:8px;border-top:1px solid var(--line)}
 .link-btn{font-size:var(--fs-4);color:var(--ink-3)}
 .link-btn:active{color:var(--ink-2)}
 .ver{font-size:var(--fs-4);color:var(--ink-3)}
@@ -708,6 +708,21 @@ input,textarea,select{outline:none}
 .foot-row{display:flex;gap:8px;margin:2px 0}
 .foot-row .link-btn{flex:1;text-align:center}
 .link-btn.danger{color:var(--danger)}
+
+/* 底部「设置」入口：收纳 分享同款 / 导入导出 / 更换底图，简化操作区 */
+.set-entry{display:flex;align-items:center;justify-content:space-between;width:100%;
+ padding:12px 16px;font-size:var(--fs-3);font-weight:700;color:var(--ink);
+ background:var(--card);border:1px solid var(--line);border-radius:var(--r-m);
+ box-shadow:var(--shadow-sm);cursor:pointer;margin-top:2px}
+.set-entry:active{transform:scale(.99)}
+.set-entry .set-caret{transition:transform .25s ease;color:var(--ink-3)}
+.set-entry.open .set-caret{transform:rotate(180deg)}
+.settings-panel{display:flex;flex-direction:column;gap:8px;padding:12px 12px;margin:0;
+ background:var(--line-2);border-radius:var(--r-m)}
+.settings-panel[hidden]{display:none}
+.settings-panel .tpl-share{margin:0}
+.settings-panel .wall-tune{margin:0}
+.settings-panel .foot-row{margin:0}
 
 /* ==========================================================
   新增：复盘日历 / 待办 / 基金 / 玉琢 / 充能
