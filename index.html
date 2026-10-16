@@ -145,6 +145,18 @@
   <div class="drawer-foot">
    <button class="tpl-share" id="shareTplBtn" type="button">分享同款模板</button>
    <button class="link-btn" id="wallpaperBtn" type="button">更换全局底图</button>
+   <div class="wall-tune">
+    <div class="wt-title">壁纸微调（对所有底图一致）</div>
+    <div class="wt-row">
+     <label>清晰度 <b id="wallClarityVal">70</b></label>
+     <input type="range" id="wallClarity" min="0" max="100" value="70">
+    </div>
+    <div class="wt-row">
+     <label>列表垫底 <b id="wallNakedVal">55%</b></label>
+     <input type="range" id="wallNaked" min="30" max="95" value="55">
+    </div>
+    <div class="wt-hint">清晰度↑＝底图更清晰、白纱更薄；↓＝更护眼柔和。垫底＝列表 / 暂无任务的白底浓度。换底图时不变。</div>
+   </div>
    <button class="link-btn" id="installHintBtn" type="button">安装到主屏</button>
    <div class="foot-row">
     <button class="link-btn" id="exportBtn" type="button">导出</button>
