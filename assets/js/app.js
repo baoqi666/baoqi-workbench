@@ -653,8 +653,7 @@ function sessionSheet(info) {
    row.style.transform = '';
    row.classList.remove('dragging');
    var order = $$('.nav-item', list).map(function (b) { return b.dataset.go; });
-   if (order.join(',') !== getNavOrder().join(',')) setNavOrder(order);
-   navSuppressClick = true;                                   // 吞掉本次松手可能触发的 click
+   if (order.join(',') !== getNavOrder().join(',')) { setNavOrder(order); navSuppressClick = true; } // 仅真换位才吞掉误触跳转
    row = null;
   }
 
