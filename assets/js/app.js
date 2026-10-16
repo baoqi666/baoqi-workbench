@@ -747,6 +747,16 @@ function sessionSheet(info) {
   $('#menuBtn').onclick = openDrawer;
   $('#drawerClose').onclick = closeDrawer;
   $('#drawerMask').onclick = closeDrawer;
+
+  // 设置入口：展开 / 收起收纳面板（仅调整入口层级，所有子功能逻辑不变）
+  var settingsBtn = $('#settingsBtn');
+  if (settingsBtn) settingsBtn.onclick = function () {
+    var p = $('#settingsPanel');
+    if (!p) return;
+    var open = p.hasAttribute('hidden');
+    if (open) p.removeAttribute('hidden'); else p.setAttribute('hidden', '');
+    settingsBtn.classList.toggle('open', open);
+  };
   var resetNavBtn = $('#resetNavBtn');
   if (resetNavBtn) resetNavBtn.onclick = function () {
    setNavOrder(ROUTES.slice());
@@ -1032,8 +1042,13 @@ function sessionSheet(info) {
   line('———— 本文件由「喵の工作台」离线导出，可安全保存到手机或云盘 ————');
   return L.join('\n');
  }
- function openDrawer() { $('#drawer').classList.add('open'); $('#drawerMask').classList.add('show'); }
- function closeDrawer() { $('#drawer').classList.remove('open'); $('#drawerMask').classList.remove('show'); }
+function openDrawer() { $('#drawer').classList.add('open'); $('#drawerMask').classList.add('show'); }
+function closeDrawer() {
+  $('#drawer').classList.remove('open');
+  $('#drawerMask').classList.remove('show');
+  var sp = $('#settingsPanel'); if (sp) sp.setAttribute('hidden', '');
+  var sb = $('#settingsBtn'); if (sb) sb.classList.remove('open');
+}
 
  /* ---------------- 路由 ---------------- */
  function go(key) {
