@@ -1053,7 +1053,7 @@ input,textarea,select{outline:none}
 /* 去框后压在壁纸上文字会糊：垫一层极淡的透明白（不恢复卡片框、无角无影），
    既托起文字、又只在壁纸场景下才被看见，白底页里几乎无感 */
 .home-block.plain > .card{
- background:rgba(255,255,255,.5);border-color:transparent;box-shadow:none;padding:0 20px;
+ background:var(--naked-bg,rgba(255,255,255,.5));border-color:transparent;box-shadow:none;padding:0 20px;
  -webkit-backdrop-filter:none;backdrop-filter:none;
 }
 
@@ -1089,7 +1089,7 @@ input,textarea,select{outline:none}
 .pg-operate .idea-item,
 .pg-operate .reward-row,
 .pg-operate .fund-card{
- background:rgba(255,255,255,.5);border:none;box-shadow:none;border-radius:0;margin-bottom:0;
+ background:var(--naked-bg,rgba(255,255,255,.5));border:none;box-shadow:none;border-radius:0;margin-bottom:0;
  padding:13px 2px;border-bottom:1px solid var(--line-2);
  -webkit-backdrop-filter:none;backdrop-filter:none;
 }
@@ -1098,6 +1098,9 @@ input,textarea,select{outline:none}
 .pg-operate .idea-item:last-child,
 .pg-operate .reward-row:last-child,
 .pg-operate .fund-card:last-child{border-bottom:none}
+/* 暂无任务等裸灰字：壁纸场景下垫一层白，避免直接糊在照片上 */
+.pg-operate > .muted,
+.pg-read > .muted{background:var(--naked-bg,rgba(255,255,255,.5))}
 /* 逾期任务的色条：去掉四边框后仍用 inset 阴影画，不退回成左侧台阶 */
 .pg-operate .task-item.overdue{border-left:none;box-shadow:inset 3px 0 0 var(--warn)}
 /* 本页主角：更高更舒展，数字放大 */
@@ -1150,7 +1153,7 @@ input,textarea,select{outline:none}
 .pg-read .naked-list .li{
  padding:13px 2px;border-bottom:1px solid var(--line-2);
  display:flex;justify-content:space-between;align-items:center;
- background:rgba(255,255,255,.5);
+ background:var(--naked-bg,rgba(255,255,255,.5));
  -webkit-backdrop-filter:none;backdrop-filter:none;
 }
 .pg-read .naked-list .li:last-child{border-bottom:none}
@@ -1161,7 +1164,7 @@ input,textarea,select{outline:none}
 /* 运动 / 健康：把原有 .fit-item / .meal-item 列表行去框（保留内部布局与交互钩子） */
 .pg-read .fit-item,
 .pg-read .meal-item{
- background:rgba(255,255,255,.5);border:none;box-shadow:none;border-radius:0;margin-bottom:0;
+ background:var(--naked-bg,rgba(255,255,255,.5));border:none;box-shadow:none;border-radius:0;margin-bottom:0;
  padding:13px 2px;border-bottom:1px solid var(--line-2);
  -webkit-backdrop-filter:none;backdrop-filter:none;
 }
