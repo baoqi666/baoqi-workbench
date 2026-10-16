@@ -591,9 +591,23 @@ function sessionSheet(info) {
      });
     });
    };
-   fr.readAsDataURL(f);
+    fr.readAsDataURL(f);
   };
- }
+  // 壁纸清晰度 / 垫底浓度 滑杆（确定性，不随底图）
+  var sClar = $('#wallClarity'), sNaked = $('#wallNaked');
+  if (sClar && global.Theme) {
+    var c0 = global.Theme.getWallClarity ? global.Theme.getWallClarity() : 70;
+    sClar.value = c0;
+    var cv = $('#wallClarityVal'); if (cv) cv.textContent = c0;
+    sClar.oninput = function () { var v = +this.value; if (cv) cv.textContent = v; global.Theme.setWallClarity(v); };
+  }
+  if (sNaked && global.Theme) {
+    var n0 = Math.round((global.Theme.getWallNaked ? global.Theme.getWallNaked() : 0.55) * 100);
+    sNaked.value = n0;
+    var nv = $('#wallNakedVal'); if (nv) nv.textContent = n0 + '%';
+    sNaked.oninput = function () { var v = +this.value; if (nv) nv.textContent = v + '%'; global.Theme.setWallNaked(v / 100); };
+  }
+}
 
  /* 长按抓取 + 拖动重排导航顺序（拖拽 ↔ 滚动锁 配对处理） */
  function initNavReorder() {
