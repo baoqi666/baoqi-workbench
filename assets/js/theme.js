@@ -7,6 +7,11 @@
   ============================================================ */
 (function (global) {
  var doc = global.document;
+ var LS = global.localStorage;
+ function readNum(k, d) { try { var v = LS && LS.getItem(k); return v == null ? d : (+v || d); } catch (e) { return d; } }
+ function writeNum(k, v) { try { if (LS) LS.setItem(k, String(v)); } catch (e) {} }
+ var WALL_CLARITY = readNum('catdesk.wallClarity', 70);   // 底图清晰度 0~100，对所有底图一致
+ var WALL_NAKED   = readNum('catdesk.wallNaked', 0.55);   // 列表垫底浓度 0~1
 
  /* ---------- 工具 ---------- */
  function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
@@ -111,7 +116,7 @@
   // —— 统一「清透明亮」主题：无论底图明暗，内容区都浅色、文字都深灰。
   //    底图明暗不再切换深/浅主题，只影响「柔光强度」与「提亮程度」。
   v['--bg'] = hsl(h, s * 0.45, 0.96);
-  v['--scene'] = rgba(255, 255, 255, 0.08 + busy * 0.12 + (dark ? 0.22 : 0)); // 极轻柔化，保留底图线条
+  v['--scene'] = 'rgba(255,255,255,0.12)';                   // 极轻柔化（固定值，不随底图）
   v['--card'] = rgba(255, 255, 255, 0.80 + busy * 0.06);    // 毛玻璃底板 ~0.80-0.86（约 85%）
   v['--card-2'] = rgba(255, 255, 255, 0.66 + busy * 0.08);
   v['--line'] = rgba(58, 52, 42, 0.12 + busy * 0.05);
@@ -124,20 +129,21 @@
   v['--brand-soft'] = hsl(h, s * 0.6, 0.93);
   v['--on-brand'] = '#ffffff';
   v['--shadow'] = '0 1px 2px rgba(50,40,18,.06), 0 6px 20px rgba(50,40,18,.06)';
-  v['--wall-scrim'] = 'transparent';                         // 删除全局遮罩：绝不压暗底图
+  v['--wall-scrim'] = 'rgba(255,255,255,' + (0.30 + (1 - WALL_CLARITY / 100) * 0.28).toFixed(3) + ')'; // 确定性白纱：只随清晰度，不随底图
   v['--bottom-fade'] = 'transparent';                        // 取消底部压暗渐变
   v['--splash-veil'] = rgba(255, 255, 255, dark ? 0.44 : 0.16); // 暗底图开屏加强浅色柔光，保证深灰文字可读
   v['--splash-glow'] = rgba(255, 255, 255, 0.45);
-  v['--wall-blur'] = '1px';                                  // 近乎清晰，保留底图线条与渐变
+  v['--wall-blur'] = Math.round((1 - WALL_CLARITY / 100) * 7) + 'px';            // 确定性模糊：只随清晰度，不随底图
   v['--wall-sat'] = '1';                                     // 不脱色，保留原图质感
   v['--wall-bri'] = dark ? '1.22' : '0.98';                  // 暗底图提亮（整体转亮），亮底图仅轻微降低亮度
+  v['--naked-bg'] = 'rgba(255,255,255,' + WALL_NAKED.toFixed(3) + ')';           // 列表/暂无任务/去框图表 垫底浓度（固定，不随底图）
   return v;
  }
 
  /* ---------- 3. 写入 / 清除 CSS 变量 ---------- */
  var KNOWN = ['--bg', '--scene', '--card', '--card-2', '--line', '--line-2', '--ink', '--ink-2', '--ink-3',
   '--brand', '--brand-ink', '--brand-soft', '--on-brand', '--shadow',
-  '--wall-scrim', '--wall-blur', '--wall-sat', '--wall-bri', '--splash-veil', '--splash-glow', '--wall-src', '--bottom-fade'];
+  '--wall-scrim', '--wall-blur', '--wall-sat', '--wall-bri', '--splash-veil', '--splash-glow', '--wall-src', '--bottom-fade', '--naked-bg'];
 
  function applyVars(vars) {
   var root = doc.documentElement;
@@ -229,6 +235,18 @@
   img.src = dataUrl;
  }
 
+ /* ---------- 确定性清晰度（只随用户设置，不随底图） ---------- */
+ function applyWallClarity() {
+  var root = doc.documentElement;
+  var t = 1 - WALL_CLARITY / 100;
+  root.style.setProperty('--wall-scrim', 'rgba(255,255,255,' + (0.30 + t * 0.28).toFixed(3) + ')');
+  root.style.setProperty('--wall-blur', Math.round(t * 7) + 'px');
+  root.style.setProperty('--scene', 'rgba(255,255,255,0.12)');
+  root.style.setProperty('--naked-bg', 'rgba(255,255,255,' + WALL_NAKED.toFixed(3) + ')');
+ }
+ function setWallClarity(c) { WALL_CLARITY = clamp(+c, 0, 100); writeNum('catdesk.wallClarity', WALL_CLARITY); applyWallClarity(); }
+ function setWallNaked(n) { WALL_NAKED = clamp(+n, 0, 1); writeNum('catdesk.wallNaked', WALL_NAKED); applyWallClarity(); }
+
 global.Theme = {
  setWallpaper: setWallpaper,
  clearWallpaper: function () { setWallpaper(''); },
@@ -237,8 +255,10 @@ global.Theme = {
  snapshot: snapshot,
  applyVars: applyVars,
  clearVars: clearVars,
- compress: compress,
+  compress: compress,
  analyze: analyze,
- buildVars: buildVars
+ buildVars: buildVars,
+ setWallClarity: setWallClarity,
+ setWallNaked: setWallNaked
 };
 })(window);
