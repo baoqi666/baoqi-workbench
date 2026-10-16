@@ -527,7 +527,7 @@ function sessionSheet(info) {
  var THEME_KEYS = ['--bg', '--card', '--card-2', '--line', '--line-2', '--ink', '--ink-2', '--ink-3',
   '--brand', '--brand-ink', '--brand-soft', '--on-brand', '--shadow',
   '--wall-scrim', '--wall-blur', '--wall-sat', '--wall-bri', '--splash-veil',
-  '--splash-glow', '--scene', '--wall-src'];
+  '--splash-glow', '--scene', '--wall-src', '--naked-bg'];
 
  function setWallImage(src) {
   var w = $('#wallpaper'), s = $('#wallScrim');
@@ -548,10 +548,11 @@ function sessionSheet(info) {
  function initTheme() {
   if (!global.Theme || !Store.getWallpaper) return;
   var wp = Store.getWallpaper();
-  if (!wp || !wp.src) return;
-  if (wp.palette) { Theme.applyVars(wp.palette); setWallImage(wp.src); return; }
+  if (!wp || !wp.src) { if (global.Theme.applyWallClarity) global.Theme.applyWallClarity(); return; }
+  if (wp.palette) { Theme.applyVars(wp.palette); setWallImage(wp.src); if (global.Theme.applyWallClarity) global.Theme.applyWallClarity(); return; }
   Theme.setWallpaper(wp.src, function (vars) {
    if (vars) Store.setWallpaper(wp.src, vars);
+   if (global.Theme.applyWallClarity) global.Theme.applyWallClarity();
   });
  }
 
