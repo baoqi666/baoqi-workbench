@@ -599,9 +599,9 @@ function sessionSheet(info) {
   var list = $('#navList');
   if (!list || list._navBound) return;
   list._navBound = true;
-  var LONG_MS = 350, MOVE_CANCEL = 24;
-  var row = null, pressKey = '', startX = 0, startY = 0, longTimer = null;
-  var dragging = false, pid = null, downY = 0, scaleOn = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var LONG_MS = 350, MOVE_CANCEL = 10, SCROLL_PX = 40, HOLD_MS = 120;
+  var row = null, startX = 0, startY = 0, longTimer = null, pid = null, t0 = 0, touchActive = false;
+  var dragging = false, downY = 0, scaleOn = !matchMedia('(prefers-reduced-motion: reduce)').matches;
   var hinted = false;
 
   function clearLong() { if (longTimer) { clearTimeout(longTimer); longTimer = null; } }
@@ -617,63 +617,98 @@ function sessionSheet(info) {
    return closest.el;
   }
 
-  function beginDrag(e) {
-   dragging = true; pid = e.pointerId; row.classList.add('dragging');
-   try { row.setPointerCapture(pid); } catch (x) {}
+  // 抓起被按住的条目（downY 用按下起点，保证手指处视觉连续）
+  function beginDrag() {
+   if (dragging || !row) return;
+   dragging = true;
+   row.classList.add('dragging');
+   try { if (pid != null) row.setPointerCapture(pid); } catch (x) {}
    list.classList.add('reordering');
-   downY = e.clientY;
+   downY = startY;
    if (!hinted) { hinted = true; UI.toast('拖动排序，松手保存'); }
   }
 
-  function moveDrag(e) {
+  function moveDrag(y) {
    if (!dragging) return;
-   var dy = e.clientY - downY;
-   var cur = row.getBoundingClientRect().top;               // 当前视觉顶（含 transform）
+   var dy = y - downY;
+   var cur = row.getBoundingClientRect().top;                // 当前视觉顶（含 transform）
    row.style.transform = 'translateY(' + dy + 'px)' + (scaleOn ? ' scale(1.03)' : '');
-   var ref = afterRow(e.clientY);
-   if (ref !== row.nextSibling) {                            // 跨过中点 → 实时换位
+   var ref = afterRow(y);
+   if (ref !== row.nextSibling) {                             // 跨过中点 → 实时换位
     if (ref == null) list.appendChild(row); else list.insertBefore(row, ref);
     row.style.transform = '';
-    var newTop = row.getBoundingClientRect().top;            // 新槽位（无 transform）
-    var adj = cur - newTop;                                  // 维持手指处视觉不动
+    var newTop = row.getBoundingClientRect().top;             // 新槽位（无 transform）
+    var adj = cur - newTop;                                   // 维持手指处视觉不动
     row.style.transform = 'translateY(' + adj + 'px)' + (scaleOn ? ' scale(1.03)' : '');
-    downY = e.clientY - adj;                                 // 续接基准，避免跳变
+    downY = y - adj;                                          // 续接基准，避免跳变
    }
-   e.preventDefault();
   }
 
-  function endDrag(e) {
+  function endDrag() {
    clearLong();
    if (!dragging) { row = null; return; }
    dragging = false;
-   try { row.releasePointerCapture(pid); } catch (x) {}
+   try { if (pid != null) row.releasePointerCapture(pid); } catch (x) {}
    list.classList.remove('reordering');
    row.style.transform = '';
    row.classList.remove('dragging');
    var order = $$('.nav-item', list).map(function (b) { return b.dataset.go; });
    if (order.join(',') !== getNavOrder().join(',')) setNavOrder(order);
-   navSuppressClick = true;                                  // 吞掉本次松手可能触发的 click
+   navSuppressClick = true;                                   // 吞掉本次松手可能触发的 click
    row = null;
-   if (e && e.preventDefault) e.preventDefault();
   }
 
-  list.addEventListener('pointerdown', function (e) {
-   var el = e.target.closest && e.target.closest('.nav-item');
-   if (!el || (e.button && e.button !== 0)) return;
-   row = el.parentElement; pressKey = el.dataset.go; startX = e.clientX; startY = e.clientY;
-   clearLong();
-   longTimer = setTimeout(function () { beginDrag(e); }, LONG_MS);
-  });
-  list.addEventListener('pointermove', function (e) {
-   if (!row) return;
-   if (!dragging) {
-    if (Math.abs(e.clientX - startX) > MOVE_CANCEL || Math.abs(e.clientY - startY) > MOVE_CANCEL) clearLong();
-    return;
+  // 按下 / 移动判定（touch 与 mouse 共用）：动得少=抖动或按住、动得多=滚动、按住稍候再动=拖拽
+  function onStart(x, y, id, el) {
+   startX = x; startY = y; pid = id; t0 = Date.now();
+   row = el ? el.parentElement : null;                         // el=.nav-item 按钮；row 是要移动的外层 <li>
+   clearLong(); longTimer = setTimeout(beginDrag, LONG_MS);
+  }
+  function onMove(x, y, prevent) {
+   if (row && !dragging) {                                     // 抓取判定期：小动=按住/抖动，大动=滚动
+    var dx = Math.abs(x - startX), dy = Math.abs(y - startY);
+    if (dx > MOVE_CANCEL || dy > MOVE_CANCEL) {
+     if (Date.now() - t0 > HOLD_MS) beginDrag();              // 按住一小会儿再动 → 拖拽
+     else if (dx > SCROLL_PX || dy > SCROLL_PX) { clearLong(); row = null; return; } // 快速大幅滑 → 滚动
+    }
    }
-   moveDrag(e);
+   if (dragging) { if (prevent) prevent(); moveDrag(y); }
+  }
+
+  // ---- Touch（安卓/ iOS）----
+  function tOf(e) { for (var i = 0; i < e.changedTouches.length; i++) if (e.changedTouches[i].identifier === pid) return e.changedTouches[i]; return null; }
+  list.addEventListener('touchstart', function (e) {
+   var el = e.target.closest && e.target.closest('.nav-item');
+   if (!el) return;
+   touchActive = true;
+   onStart(e.touches[0].clientX, e.touches[0].clientY, e.touches[0].identifier, el);
+  }, { passive: true });
+  list.addEventListener('touchmove', function (e) {
+   if (!row) return;
+   var t = tOf(e); if (!t) return;
+   if (!dragging) {                                            // 抓取判定期：小幅位移接管手势(防滚动/系统菜单抢走)，大幅滑则放行滚动
+    var dx = Math.abs(t.clientX - startX), dy = Math.abs(t.clientY - startY);
+    if (dx > SCROLL_PX || dy > SCROLL_PX) { clearLong(); row = null; return; }
+    e.preventDefault();
+   }
+   onMove(t.clientX, t.clientY, function () { e.preventDefault(); });
+  }, { passive: false });
+  list.addEventListener('touchend', function () { touchActive = false; if (row) endDrag(); });
+  list.addEventListener('touchcancel', function () { touchActive = false; if (row) endDrag(); });
+
+  // ---- Mouse（桌面预览）----
+  list.addEventListener('mousedown', function (e) {
+   if (touchActive || e.button !== 0) return;
+   var el = e.target.closest && e.target.closest('.nav-item');
+   if (!el) return;
+   onStart(e.clientX, e.clientY, null, el);
   });
-  list.addEventListener('pointerup', function (e) { if (row) endDrag(e); });
-  list.addEventListener('pointercancel', function (e) { if (row) endDrag(e); });
+  list.addEventListener('mousemove', function (e) {
+   if (touchActive || !row) return;
+   onMove(e.clientX, e.clientY, null);
+  });
+  list.addEventListener('mouseup', function () { if (row) endDrag(); });
+
   list.addEventListener('contextmenu', function (e) { if (dragging || longTimer) e.preventDefault(); });
  }
 
