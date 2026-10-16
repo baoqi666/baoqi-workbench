@@ -259,6 +259,8 @@ global.Theme = {
  analyze: analyze,
  buildVars: buildVars,
  setWallClarity: setWallClarity,
- setWallNaked: setWallNaked
+ setWallNaked: setWallNaked,
+ getWallClarity: function () { return WALL_CLARITY; },
+ getWallNaked: function () { return WALL_NAKED; }
 };
 })(window);
