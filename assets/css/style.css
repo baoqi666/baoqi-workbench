@@ -723,6 +723,7 @@ input,textarea,select{outline:none}
 .settings-panel .tpl-share{margin:0}
 .settings-panel .wall-tune{margin:0}
 .settings-panel .foot-row{margin:0}
+.settings-panel .set-sep{height:1px;background:var(--line);opacity:.7;margin:2px 0}
 
 /* ==========================================================
   新增：复盘日历 / 待办 / 基金 / 玉琢 / 充能
